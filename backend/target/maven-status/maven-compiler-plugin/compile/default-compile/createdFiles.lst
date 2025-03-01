@@ -1,0 +1,5 @@
+com/mongo/kitchensink/exception/DuplicateEmailException.class
+com/mongo/kitchensink/KitchensinkApplication.class
+com/mongo/kitchensink/repository/MemberRepository.class
+com/mongo/kitchensink/model/Member.class
+com/mongo/kitchensink/exception/MemberNotFoundException.class
