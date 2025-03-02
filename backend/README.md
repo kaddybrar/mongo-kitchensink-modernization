@@ -11,6 +11,52 @@ This is the backend component of the MongoDB Kitchen Sink Modernization project,
 - JaCoCo 0.8.11
 - Swagger/OpenAPI 3
 
+## Project Structure
+
+```
+src/
+├── main/
+│   ├── java/com/mongo/kitchensink/
+│   │   ├── config/
+│   │   │   └── OpenApiConfig.java         # Swagger/OpenAPI configuration
+│   │   ├── controller/
+│   │   │   ├── HealthController.java      # Health check endpoint
+│   │   │   └── MemberController.java      # Member CRUD endpoints
+│   │   ├── exception/
+│   │   │   ├── DuplicateEmailException.java
+│   │   │   ├── ErrorResponse.java
+│   │   │   ├── GlobalExceptionHandler.java
+│   │   │   └── MemberNotFoundException.java
+│   │   ├── model/
+│   │   │   └── Member.java                # Member entity with validation
+│   │   ├── repository/
+│   │   │   └── MemberRepository.java      # Data access layer
+│   │   ├── service/
+│   │   │   └── MemberService.java         # Business logic layer
+│   │   └── KitchensinkApplication.java    # Main application class
+│   └── resources/
+│       ├── application.properties         # Application configuration
+│       └── application-test.properties    # Test configuration
+└── test/
+    └── java/com/mongo/kitchensink/
+        ├── base/
+        │   ├── BaseControllerTest.java    # Base class for controller tests
+        │   ├── BaseIntegrationTest.java   # Base class for integration tests
+        │   └── BaseUnitTest.java          # Base class for unit tests
+        ├── controller/
+        │   ├── HealthControllerTest.java
+        │   └── MemberControllerTest.java
+        ├── integration/
+        │   ├── HealthControllerIntegrationTest.java
+        │   └── MemberServiceIntegrationTest.java
+        ├── service/
+        │   └── MemberServiceTest.java
+        ├── util/
+        │   ├── ExceptionTestUtil.java     # Utilities for testing exceptions
+        │   └── TestDataFactory.java       # Factory for test data
+        └── JacocoVerificationTest.java    # Verifies JaCoCo integration
+```
+
 ## Getting Started
 
 ### Prerequisites
