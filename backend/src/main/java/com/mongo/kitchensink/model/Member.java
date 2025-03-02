@@ -12,6 +12,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 
+/**
+ * Entity class representing a member.
+ * Contains member information and validation constraints.
+ */
 @Entity
 @Table(name = "members")
 @Data
@@ -23,7 +27,6 @@ import java.time.LocalDateTime;
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonIgnore
     private Long id;
 
     @NotBlank(message = "Name is required")
@@ -34,8 +37,8 @@ public class Member {
     )
     private String name;
 
-    @Email(message = "Invalid email format")
     @NotBlank(message = "Email is required")
+    @Email(message = "Email should be valid")
     @Column(unique = true)
     @Schema(
         description = "Member's email address",
@@ -44,7 +47,7 @@ public class Member {
     )
     private String email;
 
-    @Pattern(regexp = "^\\+?[1-9][0-9]{7,14}$", message = "Invalid phone number")
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Phone number should be valid")
     @Schema(
         description = "Member's phone number in international format",
         example = "+12345678901"

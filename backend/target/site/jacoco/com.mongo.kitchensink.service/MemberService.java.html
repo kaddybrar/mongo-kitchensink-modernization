@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MemberService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">kitchensink</a> &gt; <a href="index.source.html" class="el_package">com.mongo.kitchensink.service</a> &gt; <span class="el_source">MemberService.java</span></div><h1>MemberService.java</h1><pre class="source lang-java linenums">package com.mongo.kitchensink.service;
+
+import com.mongo.kitchensink.exception.DuplicateEmailException;
+import com.mongo.kitchensink.exception.MemberNotFoundException;
+import com.mongo.kitchensink.model.Member;
+import com.mongo.kitchensink.repository.MemberRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+/**
+ * Service class for managing member operations.
+ * Handles business logic for member-related operations including CRUD and search functionality.
+ */
+@Service
+@Transactional
+<span class="fc" id="L19">@Slf4j</span>
+public class MemberService {
+    private MemberRepository memberRepository;
+
+    /**
+     * Constructs a new MemberService with the specified repository.
+     *
+     * @param memberRepository the repository for member data access
+     */
+<span class="fc" id="L28">    public MemberService(MemberRepository memberRepository) {</span>
+<span class="fc" id="L29">        this.memberRepository = memberRepository;</span>
+<span class="fc" id="L30">    }</span>
+
+    /**
+     * Creates a new member after validating email uniqueness.
+     *
+     * @param member the member to create
+     * @return the created member
+     * @throws DuplicateEmailException if the email already exists
+     */
+    public Member createMember(Member member) {
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (memberRepository.existsByEmail(member.getEmail())) {</span>
+<span class="fc" id="L41">            throw new DuplicateEmailException(&quot;Email already exists&quot;);</span>
+        }
+<span class="fc" id="L43">        log.debug(&quot;Creating new member: {}&quot;, member.getEmail());</span>
+<span class="fc" id="L44">        return memberRepository.save(member);</span>
+    }
+
+    /**
+     * Retrieves all members from the database.
+     *
+     * @return list of all members
+     */
+    public List&lt;Member&gt; getAllMembers() {
+<span class="fc" id="L53">        return memberRepository.findAll();</span>
+    }
+
+    /**
+     * Retrieves a specific member by their ID.
+     *
+     * @param id the ID of the member to retrieve
+     * @return the requested member
+     * @throws MemberNotFoundException if the member is not found
+     */
+    public Member getMemberById(Long id) {
+<span class="fc" id="L64">        return memberRepository.findById(id)</span>
+<span class="fc" id="L65">            .orElseThrow(() -&gt; new MemberNotFoundException(&quot;Member not found&quot;));</span>
+    }
+
+    /**
+     * Updates an existing member's information.
+     *
+     * @param id the ID of the member to update
+     * @param updatedMember the updated member details
+     * @return the updated member
+     * @throws MemberNotFoundException if the member is not found
+     * @throws DuplicateEmailException if the email already exists
+     */
+    public Member updateMember(Long id, Member updatedMember) {
+<span class="fc" id="L78">        Member existingMember = getMemberById(id);</span>
+        
+        // Check if the email is being changed and if it's already in use
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (!existingMember.getEmail().equals(updatedMember.getEmail()) &amp;&amp; </span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">            memberRepository.existsByEmail(updatedMember.getEmail())) {</span>
+<span class="fc" id="L83">            throw new DuplicateEmailException(&quot;Email already exists&quot;);</span>
+        }
+        
+        // Update the fields
+<span class="fc" id="L87">        existingMember.setName(updatedMember.getName());</span>
+<span class="fc" id="L88">        existingMember.setEmail(updatedMember.getEmail());</span>
+<span class="fc" id="L89">        existingMember.setPhoneNumber(updatedMember.getPhoneNumber());</span>
+        
+<span class="fc" id="L91">        return memberRepository.save(existingMember);</span>
+    }
+
+    /**
+     * Deletes a member by their ID.
+     *
+     * @param id the ID of the member to delete
+     * @throws MemberNotFoundException if the member is not found
+     */
+    public void deleteMember(Long id) {
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (!memberRepository.existsById(id)) {</span>
+<span class="fc" id="L102">            throw new MemberNotFoundException(&quot;Member not found&quot;);</span>
+        }
+<span class="fc" id="L104">        memberRepository.deleteById(id);</span>
+<span class="fc" id="L105">    }</span>
+
+    /**
+     * Searches for members by name (case-insensitive partial match).
+     *
+     * @param name the name to search for
+     * @return list of members whose names contain the search string
+     */
+    public List&lt;Member&gt; searchMembers(String name) {
+<span class="fc" id="L114">        return memberRepository.findByNameContainingIgnoreCase(name);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

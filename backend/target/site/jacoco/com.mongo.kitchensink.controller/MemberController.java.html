@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MemberController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">kitchensink</a> &gt; <a href="index.source.html" class="el_package">com.mongo.kitchensink.controller</a> &gt; <span class="el_source">MemberController.java</span></div><h1>MemberController.java</h1><pre class="source lang-java linenums">package com.mongo.kitchensink.controller;
+
+import com.mongo.kitchensink.model.Member;
+import com.mongo.kitchensink.service.MemberService;
+import com.mongo.kitchensink.exception.ErrorResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * REST controller for managing Member operations.
+ * Provides endpoints for CRUD operations and member search functionality.
+ */
+@RestController
+@RequestMapping(&quot;/api/v1/members&quot;)
+<span class="fc" id="L26">@Slf4j</span>
+@Tag(name = &quot;Member&quot;, description = &quot;Member management APIs&quot;)
+public class MemberController {
+    private final MemberService memberService;
+
+    /**
+     * Constructs a new MemberController with the specified MemberService.
+     *
+     * @param memberService the service handling member business logic
+     */
+<span class="fc" id="L36">    public MemberController(MemberService memberService) {</span>
+<span class="fc" id="L37">        this.memberService = memberService;</span>
+<span class="fc" id="L38">    }</span>
+
+    @Operation(summary = &quot;Create a new member&quot;)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Member created successfully&quot;,
+                content = @Content(schema = @Schema(implementation = Member.class))),
+        @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid input&quot;),
+        @ApiResponse(responseCode = &quot;409&quot;, description = &quot;Email already exists&quot;,
+                content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping
+    public ResponseEntity&lt;Member&gt; createMember(@Valid @RequestBody Member member) {
+<span class="fc" id="L50">        log.info(&quot;Creating new member&quot;);</span>
+<span class="fc" id="L51">        return ResponseEntity.ok(memberService.createMember(member));</span>
+    }
+
+    @Operation(summary = &quot;Get all members&quot;)
+    @ApiResponse(responseCode = &quot;200&quot;, description = &quot;List all members&quot;,
+            content = @Content(schema = @Schema(implementation = Member.class)))
+    @GetMapping
+    public ResponseEntity&lt;List&lt;Member&gt;&gt; getAllMembers() {
+<span class="fc" id="L59">        return ResponseEntity.ok(memberService.getAllMembers());</span>
+    }
+
+    @Operation(summary = &quot;Get a member by ID&quot;)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Found the member&quot;,
+                content = @Content(schema = @Schema(implementation = Member.class))),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Member not found&quot;,
+                content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;Member&gt; getMemberById(
+            @Parameter(description = &quot;ID of member to be searched&quot;) 
+            @PathVariable Long id) {
+<span class="fc" id="L73">        return ResponseEntity.ok(memberService.getMemberById(id));</span>
+    }
+
+    @Operation(summary = &quot;Update a member&quot;)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Member updated successfully&quot;,
+                content = @Content(schema = @Schema(implementation = Member.class))),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Member not found&quot;,
+                content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid input&quot;)
+    })
+    @PutMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;Member&gt; updateMember(
+            @Parameter(description = &quot;ID of member to be updated&quot;) 
+            @PathVariable Long id,
+            @Valid @RequestBody Member memberDetails) {
+<span class="fc" id="L89">        return ResponseEntity.ok(memberService.updateMember(id, memberDetails));</span>
+    }
+
+    @Operation(summary = &quot;Delete a member&quot;)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = &quot;204&quot;, description = &quot;Member deleted successfully&quot;),
+        @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Member not found&quot;,
+                content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;Void&gt; deleteMember(
+            @Parameter(description = &quot;ID of member to be deleted&quot;) 
+            @PathVariable Long id) {
+<span class="fc" id="L102">        memberService.deleteMember(id);</span>
+<span class="fc" id="L103">        return ResponseEntity.noContent().build();</span>
+    }
+
+    @Operation(summary = &quot;Search members by name&quot;)
+    @ApiResponse(responseCode = &quot;200&quot;, description = &quot;List of members matching the search criteria&quot;,
+            content = @Content(schema = @Schema(implementation = Member.class)))
+    @GetMapping(&quot;/search&quot;)
+    public ResponseEntity&lt;List&lt;Member&gt;&gt; searchMembers(
+            @Parameter(description = &quot;Name to search for&quot;) 
+            @RequestParam String name) {
+<span class="fc" id="L113">        return ResponseEntity.ok(memberService.searchMembers(name));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

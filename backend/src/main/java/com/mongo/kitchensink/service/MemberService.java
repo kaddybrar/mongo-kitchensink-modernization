@@ -18,7 +18,7 @@ import java.util.List;
 @Transactional
 @Slf4j
 public class MemberService {
-    private final MemberRepository memberRepository;
+    private MemberRepository memberRepository;
 
     /**
      * Constructs a new MemberService with the specified repository.
@@ -69,16 +69,26 @@ public class MemberService {
      * Updates an existing member's information.
      *
      * @param id the ID of the member to update
-     * @param memberDetails the updated member details
+     * @param updatedMember the updated member details
      * @return the updated member
      * @throws MemberNotFoundException if the member is not found
+     * @throws DuplicateEmailException if the email already exists
      */
-    public Member updateMember(Long id, Member memberDetails) {
-        Member member = getMemberById(id);
-        member.setName(memberDetails.getName());
-        member.setPhoneNumber(memberDetails.getPhoneNumber());
-        log.debug("Updating member: {}", member.getEmail());
-        return memberRepository.save(member);
+    public Member updateMember(Long id, Member updatedMember) {
+        Member existingMember = getMemberById(id);
+        
+        // Check if the email is being changed and if it's already in use
+        if (!existingMember.getEmail().equals(updatedMember.getEmail()) && 
+            memberRepository.existsByEmail(updatedMember.getEmail())) {
+            throw new DuplicateEmailException("Email already exists");
+        }
+        
+        // Update the fields
+        existingMember.setName(updatedMember.getName());
+        existingMember.setEmail(updatedMember.getEmail());
+        existingMember.setPhoneNumber(updatedMember.getPhoneNumber());
+        
+        return memberRepository.save(existingMember);
     }
 
     /**

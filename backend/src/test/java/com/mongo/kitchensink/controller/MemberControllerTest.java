@@ -1,20 +1,15 @@
 package com.mongo.kitchensink.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongo.kitchensink.base.BaseControllerTest;
 import com.mongo.kitchensink.exception.DuplicateEmailException;
-import com.mongo.kitchensink.exception.GlobalExceptionHandler;
 import com.mongo.kitchensink.exception.MemberNotFoundException;
 import com.mongo.kitchensink.model.Member;
 import com.mongo.kitchensink.service.MemberService;
+import com.mongo.kitchensink.util.TestDataFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,41 +29,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Unit tests for the MemberController class.
  * These tests verify the behavior of the REST API endpoints.
  */
-public class MemberControllerTest {
-
-    private MockMvc mockMvc;
+public class MemberControllerTest extends BaseControllerTest {
 
     @Mock
     private MemberService memberService;
 
-    @InjectMocks
     private MemberController memberController;
-
-    private ObjectMapper objectMapper = new ObjectMapper();
     private Member testMember;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        // Create controller with mocked service
+        memberController = new MemberController(memberService);
         
-        // Set up MockMvc with GlobalExceptionHandler and validator
-        mockMvc = MockMvcBuilders.standaloneSetup(memberController)
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .setValidator(new LocalValidatorFactoryBean())
-                .build();
-
-        testMember = Member.builder()
-                .id(1L)
-                .name("Test User")
-                .email("test@example.com")
-                .phoneNumber("+12345678901")
-                .build();
+        // Set up MockMvc using the base class method
+        setupMockMvc(memberController);
+        
+        // Create test data
+        testMember = TestDataFactory.createValidMember();
+        testMember.setId(1L);
     }
 
     @Test
     void createMember_ValidInput_ReturnsCreatedMember() throws Exception {
+        // Arrange
         when(memberService.createMember(any(Member.class))).thenReturn(testMember);
 
+        // Act & Assert
         mockMvc.perform(post("/api/v1/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testMember)))
@@ -83,9 +70,11 @@ public class MemberControllerTest {
 
     @Test
     void createMember_DuplicateEmail_ReturnsConflict() throws Exception {
+        // Arrange
         when(memberService.createMember(any(Member.class)))
             .thenThrow(new DuplicateEmailException("Email already exists"));
 
+        // Act & Assert
         mockMvc.perform(post("/api/v1/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testMember)))
@@ -96,10 +85,12 @@ public class MemberControllerTest {
 
     @Test
     void createMember_InvalidInput_ReturnsBadRequest() throws Exception {
+        // Arrange
         Member invalidMember = Member.builder()
                 .email("invalid-email")  // Invalid email format
                 .build();  // Missing required name
 
+        // Act & Assert
         mockMvc.perform(post("/api/v1/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidMember)))
@@ -110,12 +101,14 @@ public class MemberControllerTest {
 
     @Test
     void getAllMembers_ReturnsAllMembers() throws Exception {
+        // Arrange
         List<Member> members = Arrays.asList(
                 testMember,
                 Member.builder().id(2L).name("Second User").email("second@example.com").build()
         );
         when(memberService.getAllMembers()).thenReturn(members);
 
+        // Act & Assert
         mockMvc.perform(get("/api/v1/members"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
@@ -129,8 +122,10 @@ public class MemberControllerTest {
 
     @Test
     void getAllMembers_NoMembers_ReturnsEmptyArray() throws Exception {
+        // Arrange
         when(memberService.getAllMembers()).thenReturn(Collections.emptyList());
 
+        // Act & Assert
         mockMvc.perform(get("/api/v1/members"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
@@ -140,8 +135,10 @@ public class MemberControllerTest {
 
     @Test
     void getMemberById_ExistingId_ReturnsMember() throws Exception {
+        // Arrange
         when(memberService.getMemberById(anyLong())).thenReturn(testMember);
 
+        // Act & Assert
         mockMvc.perform(get("/api/v1/members/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(1)))
@@ -153,9 +150,11 @@ public class MemberControllerTest {
 
     @Test
     void getMemberById_NonExistingId_ReturnsNotFound() throws Exception {
+        // Arrange
         when(memberService.getMemberById(anyLong()))
             .thenThrow(new MemberNotFoundException("Member not found"));
 
+        // Act & Assert
         mockMvc.perform(get("/api/v1/members/999"))
                 .andExpect(status().isNotFound());
         
@@ -164,6 +163,7 @@ public class MemberControllerTest {
 
     @Test
     void updateMember_ValidInput_ReturnsUpdatedMember() throws Exception {
+        // Arrange
         Member updatedMember = Member.builder()
                 .id(1L)
                 .name("Updated Name")
@@ -173,6 +173,7 @@ public class MemberControllerTest {
         
         when(memberService.updateMember(anyLong(), any(Member.class))).thenReturn(updatedMember);
 
+        // Act & Assert
         mockMvc.perform(put("/api/v1/members/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedMember)))
@@ -187,6 +188,7 @@ public class MemberControllerTest {
 
     @Test
     void updateMember_NonExistingId_ReturnsNotFound() throws Exception {
+        // Arrange
         Member updatedMember = Member.builder()
                 .name("Updated Name")
                 .email("updated@example.com")
@@ -196,6 +198,7 @@ public class MemberControllerTest {
         when(memberService.updateMember(anyLong(), any(Member.class)))
             .thenThrow(new MemberNotFoundException("Member not found"));
 
+        // Act & Assert
         mockMvc.perform(put("/api/v1/members/999")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedMember)))
@@ -206,6 +209,7 @@ public class MemberControllerTest {
 
     @Test
     void updateMember_DuplicateEmail_ReturnsConflict() throws Exception {
+        // Arrange
         Member updatedMember = Member.builder()
                 .name("Updated Name")
                 .email("duplicate@example.com")
@@ -215,6 +219,7 @@ public class MemberControllerTest {
         when(memberService.updateMember(anyLong(), any(Member.class)))
             .thenThrow(new DuplicateEmailException("Email already exists"));
 
+        // Act & Assert
         mockMvc.perform(put("/api/v1/members/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedMember)))
@@ -225,10 +230,12 @@ public class MemberControllerTest {
 
     @Test
     void updateMember_InvalidInput_ReturnsBadRequest() throws Exception {
+        // Arrange
         Member invalidMember = Member.builder()
                 .email("invalid-email")  // Invalid email format
                 .build();  // Missing required name
 
+        // Act & Assert
         mockMvc.perform(put("/api/v1/members/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidMember)))
@@ -239,8 +246,10 @@ public class MemberControllerTest {
 
     @Test
     void deleteMember_ExistingId_ReturnsNoContent() throws Exception {
+        // Arrange
         doNothing().when(memberService).deleteMember(anyLong());
 
+        // Act & Assert
         mockMvc.perform(delete("/api/v1/members/1"))
                 .andExpect(status().isNoContent());
         
@@ -249,9 +258,11 @@ public class MemberControllerTest {
 
     @Test
     void deleteMember_NonExistingId_ReturnsNotFound() throws Exception {
+        // Arrange
         doThrow(new MemberNotFoundException("Member not found"))
             .when(memberService).deleteMember(anyLong());
 
+        // Act & Assert
         mockMvc.perform(delete("/api/v1/members/999"))
                 .andExpect(status().isNotFound());
         
@@ -260,9 +271,11 @@ public class MemberControllerTest {
 
     @Test
     void searchMembers_ReturnsMatchingMembers() throws Exception {
+        // Arrange
         List<Member> matchingMembers = Arrays.asList(testMember);
         when(memberService.searchMembers(anyString())).thenReturn(matchingMembers);
 
+        // Act & Assert
         mockMvc.perform(get("/api/v1/members/search?name=Test"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
@@ -274,8 +287,10 @@ public class MemberControllerTest {
 
     @Test
     void searchMembers_NoMatches_ReturnsEmptyArray() throws Exception {
+        // Arrange
         when(memberService.searchMembers(anyString())).thenReturn(Collections.emptyList());
 
+        // Act & Assert
         mockMvc.perform(get("/api/v1/members/search?name=NonExistent"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
@@ -285,6 +300,7 @@ public class MemberControllerTest {
 
     @Test
     void searchMembers_MissingNameParameter_ReturnsBadRequest() throws Exception {
+        // Act & Assert
         mockMvc.perform(get("/api/v1/members/search"))
                 .andExpect(status().isBadRequest());
         
