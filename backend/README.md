@@ -1,100 +1,137 @@
-# Kitchen Sink Backend Service
+# MongoDB Kitchen Sink Backend
 
-A modernized Spring Boot REST API service for member management with CRUD operations and validation.
+This is the backend component of the MongoDB Kitchen Sink Modernization project, featuring RESTful CRUD APIs , comprehensive testing, and code coverage analysis.
 
-## Overview
+## Technology Stack
 
-This service provides a RESTful API for managing members with features including:
-- Complete CRUD operations for members
-- Email uniqueness validation
-- Name-based search functionality
-- Comprehensive error handling
-- OpenAPI/Swagger documentation
-- Health monitoring endpoint
-
-## Tech Stack
-
-- Java 17
+- Java 23
 - Spring Boot 3.1.0
-- Spring Data JPA
-- H2 Database
-- OpenAPI 3.0 (Swagger)
-- Lombok
-- Maven
+- JUnit 5
+- Mockito 5.10.0
+- JaCoCo 0.8.11
+- Swagger/OpenAPI 3
 
-## Error Handling
+## Getting Started
 
-The service implements comprehensive error handling through `GlobalExceptionHandler`:
+### Prerequisites
 
-### Error Types
-- `400 Bad Request`: Invalid input validation
-- `404 Not Found`: Member not found
-- `409 Conflict`: Email already exists
-- `500 Internal Server Error`: Server error
+- Java 23 or higher
+- Maven 3.8 or higher
 
-## Data Validation
 
-### Member Entity Validation
-- Name: Required field
-- Email: Required field, must be unique and valid email format
-- Phone Number: Optional field, must match international format pattern
+### Running the Application
 
-## Project Structure
-    src/main/java/com/mongo/kitchensink/
-    ├── config/
-    │ └── OpenApiConfig.java # Swagger/OpenAPI configuration
-    ├── controller/
-    │ ├── MemberController.java # Member REST endpoints
-    │ └── HealthController.java # Health check endpoint
-    ├── exception/
-    │ ├── DuplicateEmailException.java
-    │ ├── MemberNotFoundException.java
-    │ ├── GlobalExceptionHandler.java
-    │ └── ErrorResponse.java
-    ├── model/
-    │ └── Member.java # Member entity with validation
-    ├── repository/
-    │ └── MemberRepository.java # Data access layer
-    └── service/
-    └── MemberService.java # Business logic layer
-
-## Running the Application
-
-1. Prerequisites:
-   - JDK 17
-   - Maven 3.x
-
-2. Build:
-    mvn clean install
-
-3. Run:
 ```bash
 mvn spring-boot:run
 ```
 
-4. Access:
-   - API: `http://localhost:8080`
-   - Swagger UI: `http://localhost:8080/swagger-ui.html`
-   - API Docs: `http://localhost:8080/api-docs`
-   - H2 Console: `http://localhost:8080/h2-console`
+The application will be available at http://localhost:8080.
 
+### API Documentation
 
-### Testing
+Swagger UI is available at http://localhost:8080/swagger-ui.html
+
+## Testing Framework
+
+The project implements a robust testing strategy with multiple layers of tests:
+
+### Test Structure
+
+- **Unit Tests**: Test individual components in isolation
+  - `controller`: Tests for REST controllers using MockMvc
+  - `service`: Tests for service layer with mocked repositories
+  - `repository`: Tests for data access layer
+
+- **Integration Tests**: Test components working together
+  - `integration`: End-to-end tests with actual database operations
+
+- **Base Test Classes**:
+  - `BaseUnitTest`: Common setup for unit tests with Mockito initialization
+  - `BaseControllerTest`: Common setup for controller tests with MockMvc
+  - `BaseIntegrationTest`: Common setup for integration tests with test containers
+
+### Running Tests
+
 ```bash
+# Run all tests
 mvn test
+
+# Run a specific test class
+mvn test -Dtest=MemberControllerTest
+
+# Run a specific test method
+mvn test -Dtest=MemberControllerTest#getMember_ExistingId_ReturnsMember
 ```
 
-### Building for Production
+## Code Coverage with JaCoCo
+
+JaCoCo is configured to provide code coverage metrics for the test suite.
+
+### Generating Coverage Reports
+
 ```bash
-mvn clean package
+# Run tests and generate coverage report
+mvn clean test jacoco:report
 ```
 
-## Documentation
+The coverage report will be available at `target/site/jacoco/index.html`.
 
-The API is documented using OpenAPI 3.0 (Swagger) and can be accessed at:
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-- OpenAPI Spec: `http://localhost:8080/api-docs`
+### Coverage Goals
+
+The project aims for:
+- 70% instruction coverage
+- 60% branch coverage
+
+### Coverage Configuration
+
+JaCoCo is configured in the `pom.xml` with:
+- Exclusions for generated code (Hibernate proxies, Mockito mocks)
+- Integration with Maven Surefire for test execution
+- Report generation after test execution
+
+## Java 23 Compatibility
+
+The project is configured to work with Java 23, which required special configuration for testing tools:
+
+- ByteBuddy experimental mode enabled for Mockito
+- JVM flags for module access
+- JaCoCo configuration for newer class file versions
+
+## Troubleshooting
+
+### Common Issues
+
+- **JaCoCo Instrumentation Errors**: If you encounter JaCoCo instrumentation errors, try running with `-Djacoco.skip.instrument.mockito=true`
+- **Mockito Errors with Java 23**: Use the `-Dnet.bytebuddy.experimental=true` flag to enable ByteBuddy experimental features
+- **Hibernate Proxy Issues**: JaCoCo may have issues with Hibernate proxies. The configuration excludes these classes from instrumentation.
+
+### Debugging Tests
+
+To run a specific test with debug output:
+
+```bash
+mvn test -Dtest=TestClassName -Dmaven.surefire.debug
+```
+
+## Development Guidelines
+
+### Testing Best Practices
+
+1. Use the appropriate base test class for your test
+2. Mock external dependencies in unit tests
+3. Use real dependencies in integration tests
+4. Follow the Arrange-Act-Assert pattern
+5. Test both happy paths and error scenarios
+6. Use parameterized tests for testing multiple input variations
+
+### Adding New Tests
+
+When adding new features, ensure you add corresponding tests:
+
+1. Unit tests for individual components
+2. Integration tests for end-to-end functionality
+3. Edge case tests for validation and error handling
 
 ## License
 
-This project is licensed under the Apache License 2.0
+This project is licensed under the MIT License.
