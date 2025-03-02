@@ -9,13 +9,13 @@ import org.springframework.web.bind.annotation.RestController;
  * Provides basic health monitoring functionality for the application.
  */
 @RestController
-@RequestMapping("/api/health")
+@RequestMapping("/api/v1/health")
 public class HealthController {
 
     /**
-     * Basic health check endpoint.
+     * Simple health check endpoint.
      *
-     * @return a simple status message indicating the service is running
+     * @return a message indicating the service is running
      */
     @GetMapping
     public String healthCheck() {

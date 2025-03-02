@@ -1,31 +1,36 @@
 package com.mongo.kitchensink.controller;
 
-import com.mongo.kitchensink.base.BaseControllerTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Unit tests for the HealthController class.
- * These tests verify the behavior of the health check endpoint.
+ * Unit tests for the HealthController.
  */
-public class HealthControllerTest extends BaseControllerTest {
+@ExtendWith(MockitoExtension.class)
+public class HealthControllerTest {
 
-    @InjectMocks
+    private MockMvc mockMvc;
     private HealthController healthController;
 
     @BeforeEach
     void setUp() {
-        setupMockMvc(healthController);
+        healthController = new HealthController();
+        mockMvc = MockMvcBuilders.standaloneSetup(healthController).build();
     }
 
     @Test
     void healthCheck_ReturnsServiceRunningMessage() throws Exception {
-        mockMvc.perform(get("/api/health"))
+        mockMvc.perform(get("/api/v1/health")
+                .accept(MediaType.TEXT_PLAIN))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Service is running"));
     }

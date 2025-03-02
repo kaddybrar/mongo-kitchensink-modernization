@@ -30,6 +30,6 @@ public class OpenApiConfig {
                                 .email("dev-team@example.com"))
                         .license(new License()
                                 .name("Apache 2.0")
-                                .url("http://springdoc.org")));
+                                .url("http://www.apache.org/licenses/LICENSE-2.0.html")));
     }
 } 
