@@ -32,6 +32,7 @@ public class MongoMember implements IMember {
         example = "John Doe",
         required = true
     )
+    @Indexed
     private String name;
 
     @NotBlank(message = "Email is required")

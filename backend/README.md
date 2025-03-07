@@ -306,3 +306,183 @@ When adding new features, ensure you add corresponding tests:
 ## License
 
 This project is licensed under the MIT License.
+
+## Performance Testing Framework
+
+The project includes a comprehensive performance testing framework that measures and compares different aspects of the application:
+
+### Test Structure
+
+```
+src/test/java/com/mongo/kitchensink/performance/
+├── BasePerformanceTest.java           # Base class for performance tests
+├── DatabaseStrategyComparisonTest.java # Database strategy comparison tests
+├── StartupPerformanceTest.java        # Application startup tests
+└── PerformanceReportGenerator.java    # Visual report generation
+```
+
+### Database Strategy Performance Testing
+
+Located in `DatabaseStrategyComparisonTest.java`, this test suite compares the performance of different database strategies:
+
+#### Features
+- Compares JPA, MongoDB, and dual-write strategies
+- Measures CRUD operation latencies
+- Includes warmup phase to ensure accurate measurements
+- Tracks API errors and data verification issues
+- Generates visual performance reports
+
+#### Test Configuration
+```properties
+# Test iterations
+ITERATIONS = 100
+WARMUP_ITERATIONS = 10
+
+# Metrics tracked
+- Average response time
+- P95 latency
+- P99 latency
+- API errors
+- Verification errors
+```
+
+### Application Startup Performance Testing
+
+Located in `StartupPerformanceTest.java`, this test suite measures application startup performance:
+
+#### Features
+- Measures container startup time
+- Measures Spring context initialization time
+- Runs multiple iterations with clean state
+- Uses random ports to prevent conflicts
+- Generates startup time reports
+
+#### Test Configuration
+```properties
+# Test iterations
+ITERATIONS = 3
+
+# Components measured
+- Container startup time
+- Spring context initialization
+```
+
+### Performance Report Generation
+
+The `PerformanceReportGenerator` class creates comprehensive performance reports:
+
+#### Report Features
+- Visual charts using JFreeChart
+- Average latency comparisons
+- Percentile analysis (P95, P99)
+- Error rate tracking
+- HTML reports with detailed metrics
+
+#### Report Types
+1. **Database Strategy Report**
+   - Operation-wise performance comparison
+   - Error analysis
+   - Verification results
+
+2. **Startup Performance Report**
+   - Component-wise startup times
+   - Iteration details
+   - Statistical analysis
+
+Reports are generated in the `target/performance-reports` directory with timestamps.
+
+### Running Performance Tests
+
+```bash
+# Run database strategy comparison test
+mvn test -Dtest=DatabaseStrategyComparisonTest
+
+# Run startup performance test
+mvn test -Dtest=StartupPerformanceTest
+
+# View reports
+open target/performance-reports/
+```
+
+### Base Performance Test Framework
+
+The `BasePerformanceTest` class provides core functionality:
+
+```java
+protected void startTimer()      // Start timing an operation
+protected void stopTimer()       // Stop timing and record duration
+protected double getAverageResponseTime()  // Calculate average response time
+protected double getP95ResponseTime()      // Calculate P95 latency
+protected double getP99ResponseTime()      // Calculate P99 latency
+protected void printPerformanceMetrics()   // Print formatted metrics
+```
+
+### Test Infrastructure
+
+#### TestContainers Configuration
+- MongoDB 6.0.2 container
+- PostgreSQL 15-alpine container
+- Automatic container lifecycle management
+- Dynamic port allocation
+- Configurable database properties
+
+#### Performance Optimization Properties
+
+```properties
+# MongoDB Optimizations
+spring.data.mongodb.connections-per-host=100
+spring.data.mongodb.threads-allowed-to-block-for-connection-multiplier=5
+spring.data.mongodb.connect-timeout=2000
+spring.data.mongodb.socket-timeout=5000
+spring.data.mongodb.max-wait-time=1500
+spring.data.mongodb.write-concern=MAJORITY
+spring.data.mongodb.read-preference=PRIMARY
+
+# JPA Optimizations
+spring.jpa.properties.hibernate.jdbc.batch_size=50
+```
+
+### Best Practices for Performance Testing
+
+1. **Test Environment**
+   - Use dedicated test containers
+   - Ensure clean state between tests
+   - Configure appropriate timeouts
+
+2. **Test Execution**
+   - Include warmup phase
+   - Run multiple iterations
+   - Clean databases between runs
+   - Use random ports for parallel tests
+
+3. **Data Collection**
+   - Track response times
+   - Monitor error rates
+   - Verify data consistency
+   - Generate visual reports
+
+4. **Analysis**
+   - Compare strategy performance
+   - Analyze percentile latencies
+   - Review error patterns
+   - Document findings
+
+### Future Enhancements
+
+1. **Additional Metrics**
+   - Memory usage tracking
+   - CPU utilization
+   - Network performance
+   - Database connection pool stats
+
+2. **Extended Testing**
+   - Load testing scenarios
+   - Concurrent user simulation
+   - Long-running stability tests
+   - Resource consumption analysis
+
+3. **Reporting**
+   - Real-time metrics dashboard
+   - Trend analysis
+   - Performance regression detection
+   - Automated performance alerts

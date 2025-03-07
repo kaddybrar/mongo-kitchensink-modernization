@@ -42,7 +42,7 @@ public abstract class BaseIntegrationTest {
     protected MongoMemberRepository mongoMemberRepository;
 
     @BeforeEach
-    void setUp() {
+    protected void setUp() {
         // Clean up databases before each test
         cleanDatabases();
     }
