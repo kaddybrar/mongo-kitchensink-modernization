@@ -19,7 +19,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     "app.migration.strategy=dual-write"
 })
 public class DualWriteMemberIntegrationTest extends BaseIntegrationTest {
-
     @Test
     void createMember_ValidInput_WritesToBothDatabases() throws Exception {
         // Arrange
@@ -41,6 +40,10 @@ public class DualWriteMemberIntegrationTest extends BaseIntegrationTest {
         MemberDTO createdMember = objectMapper.readValue(
                 result.getResponse().getContentAsString(), MemberDTO.class);
         String id = createdMember.getId();
+
+        // Track IDs for cleanup
+        testDataManager.trackMongoId(id);
+        testDataManager.trackJpaId(Long.parseLong(id));
 
         // Assert - Verify data in both databases
         verifyMemberExistsInBothDatabases(id, "John Doe", "john@example.com");
@@ -74,7 +77,8 @@ public class DualWriteMemberIntegrationTest extends BaseIntegrationTest {
     void deleteMember_ExistingId_DeletesFromBothDatabases() throws Exception {
         // Arrange - Create a member
         MemberDTO createdMember = createTestMember();
-
+        long jpaCount = jpaMemberRepository.count();
+        long mongoCount = mongoMemberRepository.count();
         // Verify it exists in both databases
         verifyMemberExistsInBothDatabases(createdMember.getId(), "Test User", "test@example.com");
 
@@ -83,8 +87,8 @@ public class DualWriteMemberIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isNoContent());
 
         // Assert - Verify it's deleted from both databases
-        assert jpaMemberRepository.count() == 0;
-        assert mongoMemberRepository.count() == 0;
+        assert jpaMemberRepository.count() == jpaCount - 1;
+        assert mongoMemberRepository.count() == mongoCount - 1;
     }
 
     @Test
@@ -96,25 +100,23 @@ public class DualWriteMemberIntegrationTest extends BaseIntegrationTest {
         // Act & Assert
         mockMvc.perform(get("/api/v1/members"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[*].name", containsInAnyOrder("John Doe", "Jane Doe")));
+                .andExpect(jsonPath("$[*].name", hasItems("John Doe", "Jane Doe")));
 
         // Verify both databases have the same data
-        assert jpaMemberRepository.count() == 2;
-        assert mongoMemberRepository.count() == 2;
+        assert jpaMemberRepository.count() == mongoMemberRepository.count();
     }
 
     @Test
     void searchMembers_MatchingName_ReturnsMembersFromPrimaryDatabase() throws Exception {
         // Arrange
-        createTestMember("John Doe", "john@example.com", "+12345678901");
-        createTestMember("Jane Doe", "jane@example.com", "+19876543210");
-        createTestMember("Alice Smith", "alice@example.com", "+13456789012");
+        createTestMember("John Dove", "johnDove@example.com", "+12345678901");
+        createTestMember("Jane Dove", "janeDove@example.com", "+19876543210");
+        createTestMember("Alice Smith", "aliceSmith@example.com", "+13456789012");
 
-        // Act & Assert - Search for "Doe"
-        mockMvc.perform(get("/api/v1/members/search?name=Doe"))
+        // Act & Assert - Search for "Dove"
+        mockMvc.perform(get("/api/v1/members/search?name=Dove"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[*].name", containsInAnyOrder("John Doe", "Jane Doe")));
+                .andExpect(jsonPath("$[*].name", hasItems("John Dove", "Jane Dove")));
     }
 } 

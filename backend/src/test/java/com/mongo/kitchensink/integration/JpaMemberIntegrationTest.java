@@ -4,6 +4,7 @@ import com.mongo.kitchensink.dto.MemberDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -17,7 +18,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     "app.dual-write.enabled=false"
 })
 public class JpaMemberIntegrationTest extends BaseIntegrationTest {
-
     @Test
     void createMember_ValidInput_ReturnsCreatedMember() throws Exception {
         // Arrange
@@ -26,18 +26,24 @@ public class JpaMemberIntegrationTest extends BaseIntegrationTest {
                 .email("john@example.com")
                 .phoneNumber("+12345678901")
                 .build();
-
+        long jpaCount=jpaMemberRepository.count();
         // Act & Assert
-        mockMvc.perform(post("/api/v1/members")
+        MvcResult result = mockMvc.perform(post("/api/v1/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(memberDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("John Doe"))
                 .andExpect(jsonPath("$.email").value("john@example.com"))
-                .andExpect(jsonPath("$.phoneNumber").value("+12345678901"));
+                .andExpect(jsonPath("$.phoneNumber").value("+12345678901"))
+                .andReturn();
+
+        // Extract and track ID
+        MemberDTO createdMember = objectMapper.readValue(
+                result.getResponse().getContentAsString(), MemberDTO.class);
+        testDataManager.trackJpaId(Long.parseLong(createdMember.getId()));
 
         // Verify data in database
-        assert jpaMemberRepository.count() == 1;
+        assert jpaMemberRepository.count() == jpaCount+1;
         assert jpaMemberRepository.findByEmail("john@example.com").isPresent();
     }
 
@@ -45,7 +51,7 @@ public class JpaMemberIntegrationTest extends BaseIntegrationTest {
     void createMember_DuplicateEmail_ReturnsConflict() throws Exception {
         // Arrange
         createTestMember("John Doe", "john@example.com", "+12345678901");
-
+        long jpaCount=jpaMemberRepository.count();
         MemberDTO duplicateMemberDTO = MemberDTO.builder()
                 .name("Jane Doe")
                 .email("john@example.com") // Same email
@@ -59,7 +65,7 @@ public class JpaMemberIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isConflict());
 
         // Verify only one member exists
-        assert jpaMemberRepository.count() == 1;
+        assert jpaMemberRepository.count() == jpaCount;
     }
 
     @Test
@@ -71,9 +77,8 @@ public class JpaMemberIntegrationTest extends BaseIntegrationTest {
         // Act & Assert
         mockMvc.perform(get("/api/v1/members"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[*].name", containsInAnyOrder("John Doe", "Jane Doe")))
-                .andExpect(jsonPath("$[*].email", containsInAnyOrder("john@example.com", "jane@example.com")));
+                .andExpect(jsonPath("$[*].name", hasItems("John Doe", "Jane Doe")))
+                .andExpect(jsonPath("$[*].email", hasItems("john@example.com", "jane@example.com")));
     }
 
     @Test
@@ -126,32 +131,32 @@ public class JpaMemberIntegrationTest extends BaseIntegrationTest {
     void deleteMember_ExistingId_DeletesMember() throws Exception {
         // Arrange
         MemberDTO createdMember = createTestMember();
-
+        long jpaCount=jpaMemberRepository.count();
         // Act & Assert
         mockMvc.perform(delete("/api/v1/members/" + createdMember.getId()))
                 .andExpect(status().isNoContent());
 
         // Verify member is deleted
-        assert jpaMemberRepository.count() == 0;
+        assert jpaMemberRepository.count() == jpaCount-1;
     }
 
     @Test
     void searchMembers_MatchingName_ReturnsMembers() throws Exception {
         // Arrange
-        createTestMember("John Doe", "john@example.com", "+12345678901");
-        createTestMember("Jane Doe", "jane@example.com", "+19876543210");
+        createTestMember("Johny Dove", "john@example.com", "+12345678901");
+        createTestMember("Jane Dove", "jane@example.com", "+19876543210");
         createTestMember("Alice Smith", "alice@example.com", "+13456789012");
 
-        // Act & Assert - Search for "Doe"
-        mockMvc.perform(get("/api/v1/members/search?name=Doe"))
+        // Act & Assert - Search for "Dove"
+        mockMvc.perform(get("/api/v1/members/search?name=Dove"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[*].name", containsInAnyOrder("John Doe", "Jane Doe")));
+                .andExpect(jsonPath("$[*].name", containsInAnyOrder("Johny Dove", "Jane Dove")));
 
-        // Act & Assert - Search for "John"
-        mockMvc.perform(get("/api/v1/members/search?name=John"))
+        // Act & Assert - Search for "Johny"
+        mockMvc.perform(get("/api/v1/members/search?name=Johny"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].name").value("John Doe"));
+                .andExpect(jsonPath("$[0].name").value("Johny Dove"));
     }
 } 

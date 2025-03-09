@@ -1,13 +1,11 @@
 package com.mongo.kitchensink.performance;
 
-import com.mongo.kitchensink.config.TestContainersConfig;
 import com.mongo.kitchensink.dto.MemberDTO;
 import com.mongo.kitchensink.model.JpaMember;
 import com.mongo.kitchensink.model.MongoMember;
 import com.mongo.kitchensink.repository.JpaMemberRepository;
 import com.mongo.kitchensink.repository.MongoMemberRepository;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import com.mongo.kitchensink.config.TestDataManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,8 +18,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.support.TestPropertySourceUtils;
-import org.springframework.test.util.TestSocketUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = {
     "spring.test.database.replace=NONE",
-    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.jpa.hibernate.ddl-auto=update",
     "spring.data.mongodb.auto-index-creation=true",
     "spring.main.allow-bean-definition-overriding=true",
     "spring.datasource.h2.enabled=false"
@@ -48,8 +44,7 @@ public class DatabaseStrategyComparisonTest extends BasePerformanceTest {
     private final Map<String, Map<String, Integer>> errorCounts = new HashMap<>();
     private final Map<String, Map<String, Integer>> verificationErrors = new HashMap<>();
 
-    @Autowired
-    private ApplicationContext applicationContext;
+
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -63,17 +58,10 @@ public class DatabaseStrategyComparisonTest extends BasePerformanceTest {
     @Autowired
     private MongoMemberRepository mongoMemberRepository;
 
+    @Autowired
+    private TestDataManager testDataManager;
+
     private String baseUrl;
-
-    @BeforeAll
-    static void setup() {
-        TestContainersConfig.startContainers();
-    }
-
-    @AfterAll
-    static void cleanup() {
-        TestContainersConfig.stopContainers();
-    }
 
     @Test
     void compareDatabaseStrategies() throws Exception {
@@ -99,9 +87,14 @@ public class DatabaseStrategyComparisonTest extends BasePerformanceTest {
     }
 
     private void cleanupAndWait() throws Exception {
-        // Clean both databases
-        jpaMemberRepository.deleteAll();
-        mongoMemberRepository.deleteAll();
+        // Clean up only test data
+        for (Long id : testDataManager.getTrackedJpaIds()) {
+            jpaMemberRepository.deleteById(id);
+        }
+        for (String id : testDataManager.getTrackedMongoIds()) {
+            mongoMemberRepository.deleteById(id);
+        }
+        testDataManager.clearTrackedIds();
         
         // Wait for changes to propagate
         TimeUnit.SECONDS.sleep(2);
@@ -181,12 +174,16 @@ public class DatabaseStrategyComparisonTest extends BasePerformanceTest {
         stopTimer();
 
         if (createResponse.getStatusCode().is2xxSuccessful()) {
+            String id = createResponse.getBody().getId();
+            // Track the created IDs
+            testDataManager.trackMongoId(id);
+            testDataManager.trackJpaId(Long.parseLong(id));
+
             if (!isWarmup) {
                 // Convert nanoseconds to milliseconds
                 long responseTimeMs = responseTimes.get(responseTimes.size() - 1) / 1_000_000;
                 results.computeIfAbsent("Create", k -> new ArrayList<>()).add(responseTimeMs);
             }
-            String id = createResponse.getBody().getId();
 
             // Verify dual write if enabled
             if (System.getProperty("app.dual-write.enabled").equals("true")) {

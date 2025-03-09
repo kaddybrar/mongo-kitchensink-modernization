@@ -1,6 +1,5 @@
 package com.mongo.kitchensink.performance;
 
-import com.mongo.kitchensink.config.TestContainersConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
@@ -10,8 +9,6 @@ import com.mongo.kitchensink.KitchensinkApplication;
 import org.springframework.test.context.support.TestPropertySourceUtils;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
-import org.springframework.boot.web.server.WebServerFactoryCustomizer;
-import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -25,10 +22,9 @@ import java.util.ArrayList;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = {
     "spring.test.database.replace=NONE",
-    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.jpa.hibernate.ddl-auto=update",
     "spring.data.mongodb.auto-index-creation=true",
-    "spring.main.allow-bean-definition-overriding=true",
-    "spring.datasource.h2.enabled=false"
+    "spring.main.allow-bean-definition-overriding=true"
 })
 public class StartupPerformanceTest extends BasePerformanceTest {
 
@@ -54,12 +50,6 @@ public class StartupPerformanceTest extends BasePerformanceTest {
         for (int i = 0; i < ITERATIONS; i++) {
             System.out.println("\nIteration " + (i + 1) + " of " + ITERATIONS);
             
-            // Measure container startup time
-            Instant containersStart = Instant.now();
-            TestContainersConfig.startContainers();
-            long containerStartupTime = Duration.between(containersStart, Instant.now()).toMillis();
-            startupTimes.computeIfAbsent("Container Startup", k -> new ArrayList<>()).add(containerStartupTime);
-            
             // Measure Spring context startup time
             Instant contextStart = Instant.now();
             ConfigurableApplicationContext context = null;
@@ -67,25 +57,15 @@ public class StartupPerformanceTest extends BasePerformanceTest {
                 SpringApplication app = new SpringApplication(KitchensinkApplication.class);
                 ConfigurableEnvironment env = new StandardEnvironment();
                 
-                // Get the properties from TestContainersConfig
-                Map<String, String> properties = TestContainersConfig.getTestProperties();
-                
-                // Add all test container properties
-                for (Map.Entry<String, String> entry : properties.entrySet()) {
-                    TestPropertySourceUtils.addInlinedPropertiesToEnvironment(env, 
-                        entry.getKey() + "=" + entry.getValue());
-                }
-                
                 // Find a random port for this iteration
                 int randomPort = findRandomPort();
                 
-                // Add other required properties
+                // Add required properties
                 TestPropertySourceUtils.addInlinedPropertiesToEnvironment(env,
                     "spring.test.database.replace=NONE",
-                    "spring.jpa.hibernate.ddl-auto=create-drop",
+                    "spring.jpa.hibernate.ddl-auto=update",
                     "spring.data.mongodb.auto-index-creation=true",
                     "spring.main.allow-bean-definition-overriding=true",
-                    "spring.datasource.h2.enabled=false",
                     "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect",
                     "server.port=" + randomPort
                 );
@@ -98,7 +78,6 @@ public class StartupPerformanceTest extends BasePerformanceTest {
                 if (context != null) {
                     context.close();
                 }
-                TestContainersConfig.stopContainers();
             }
         }
 

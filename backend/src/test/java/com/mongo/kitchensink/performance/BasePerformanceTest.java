@@ -15,11 +15,10 @@ public abstract class BasePerformanceTest extends BaseIntegrationTest {
     protected long startTime;
 
     @BeforeEach
-    protected void setUp() {
+    @Override
+    public void setUp() {
         super.setUp();
-        responseTimes.clear();
-        // Clean up databases before each strategy test
-        cleanDatabases();
+        responseTimes = new ArrayList<>();
     }
 
     protected void startTimer() {
@@ -27,8 +26,8 @@ public abstract class BasePerformanceTest extends BaseIntegrationTest {
     }
 
     protected void stopTimer() {
-        long duration = System.nanoTime() - startTime;
-        responseTimes.add(duration);
+        long endTime = System.nanoTime();
+        responseTimes.add(endTime - startTime);
     }
 
     protected double getAverageResponseTime() {
