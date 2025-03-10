@@ -3,6 +3,8 @@ package com.mongo.kitchensink.performance;
 import com.mongo.kitchensink.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.test.context.ActiveProfiles;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 @ActiveProfiles("test")
 public abstract class BasePerformanceTest extends BaseIntegrationTest {
+    private static final Logger logger = LoggerFactory.getLogger(BasePerformanceTest.class);
 
     protected List<Long> responseTimes = new ArrayList<>();
     protected long startTime;
@@ -58,10 +61,10 @@ public abstract class BasePerformanceTest extends BaseIntegrationTest {
     }
 
     protected void printPerformanceMetrics(String operation) {
-        System.out.println("\nPerformance Metrics for " + operation + ":");
-        System.out.println("Average Response Time: " + String.format("%.2f", getAverageResponseTime()) + " ms");
-        System.out.println("P95 Response Time: " + String.format("%.2f", getP95ResponseTime()) + " ms");
-        System.out.println("P99 Response Time: " + String.format("%.2f", getP99ResponseTime()) + " ms");
-        System.out.println("Total Requests: " + responseTimes.size());
+        logger.info("\nPerformance Metrics for {}:", operation);
+        logger.info("Average Response Time: {:.2f} ms", getAverageResponseTime());
+        logger.info("P95 Response Time: {:.2f} ms", getP95ResponseTime());
+        logger.info("P99 Response Time: {:.2f} ms", getP99ResponseTime());
+        logger.info("Total Requests: {}", responseTimes.size());
     }
 } 

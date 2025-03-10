@@ -18,6 +18,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,6 +38,8 @@ import static org.junit.jupiter.api.Assertions.*;
     "spring.datasource.h2.enabled=false"
 })
 public class DatabaseStrategyComparisonTest extends BasePerformanceTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(DatabaseStrategyComparisonTest.class);
 
     private static final int ITERATIONS = 100;
     private static final int WARMUP_ITERATIONS = 10;
@@ -119,17 +123,17 @@ public class DatabaseStrategyComparisonTest extends BasePerformanceTest {
         verificationErrors.put(strategyName, strategyVerificationErrors);
 
         // Warmup phase
-        System.out.println("\nWarming up " + strategyName + " strategy...");
-        System.out.println("Using database type: " + databaseType);
-        System.out.println("Dual write enabled: " + dualWriteEnabled);
-        System.out.println("Migration strategy: " + migrationStrategy);
+        logger.info("\nWarming up {} strategy...", strategyName);
+        logger.info("Using database type: {}", databaseType);
+        logger.info("Dual write enabled: {}", dualWriteEnabled);
+        logger.info("Migration strategy: {}", migrationStrategy);
         
         for (int i = 0; i < WARMUP_ITERATIONS; i++) {
             performOperations(strategyResults, strategyErrors, strategyVerificationErrors, true);
         }
 
         // Actual test phase
-        System.out.println("\nTesting " + strategyName + " strategy...");
+        logger.info("\nTesting {} strategy...", strategyName);
         for (int i = 0; i < ITERATIONS; i++) {
             performOperations(strategyResults, strategyErrors, strategyVerificationErrors, false);
         }
@@ -138,8 +142,8 @@ public class DatabaseStrategyComparisonTest extends BasePerformanceTest {
     private void verifyProperties(String databaseType, boolean dualWriteEnabled, String migrationStrategy) {
         // Make a test call to verify properties
         ResponseEntity<String> response = restTemplate.getForEntity("/actuator/env", String.class);
-        System.out.println("Current environment properties:");
-        System.out.println(response.getBody());
+        logger.info("Current environment properties:");
+        logger.info("{}", response.getBody());
         
         // Verify through repositories
         if (dualWriteEnabled) {
@@ -308,38 +312,38 @@ public class DatabaseStrategyComparisonTest extends BasePerformanceTest {
             // Check JPA database
             JpaMember jpaMember = jpaMemberRepository.findById(Long.parseLong(id)).orElse(null);
             if (jpaMember == null) {
+                logger.warn("JPA verification failed for {} operation - Member not found in JPA database", operation);
                 verificationErrors.merge(operation, 1, Integer::sum);
-                System.out.println("JPA verification failed for " + operation + " operation - Member not found in JPA database");
-            } else if (!jpaMember.getName().equals(memberDTO.getName()) || 
-                !jpaMember.getEmail().equals(memberDTO.getEmail())) {
+                return;
+            }
+            if (!jpaMember.getName().equals(memberDTO.getName()) || !jpaMember.getEmail().equals(memberDTO.getEmail())) {
+                logger.warn("JPA verification failed for {} operation - Data mismatch", operation);
+                logger.warn("Expected: {}", memberDTO);
+                logger.warn("Found in JPA: {}", jpaMember);
                 verificationErrors.merge(operation, 1, Integer::sum);
-                System.out.println("JPA verification failed for " + operation + " operation - Data mismatch");
-                System.out.println("Expected: " + memberDTO);
-                System.out.println("Found in JPA: " + jpaMember);
             }
 
             // Check MongoDB
             MongoMember mongoMember = mongoMemberRepository.findById(id).orElse(null);
             if (mongoMember == null) {
+                logger.warn("MongoDB verification failed for {} operation - Member not found in MongoDB", operation);
                 verificationErrors.merge(operation, 1, Integer::sum);
-                System.out.println("MongoDB verification failed for " + operation + " operation - Member not found in MongoDB");
-            } else if (!mongoMember.getName().equals(memberDTO.getName()) || 
-                !mongoMember.getEmail().equals(memberDTO.getEmail())) {
+                return;
+            }
+            if (!mongoMember.getName().equals(memberDTO.getName()) || !mongoMember.getEmail().equals(memberDTO.getEmail())) {
+                logger.warn("MongoDB verification failed for {} operation - Data mismatch", operation);
+                logger.warn("Expected: {}", memberDTO);
+                logger.warn("Found in MongoDB: {}", mongoMember);
                 verificationErrors.merge(operation, 1, Integer::sum);
-                System.out.println("MongoDB verification failed for " + operation + " operation - Data mismatch");
-                System.out.println("Expected: " + memberDTO);
-                System.out.println("Found in MongoDB: " + mongoMember);
             }
 
-            // Print database counts for verification
-            System.out.println("Current database counts after " + operation + ":");
-            System.out.println("JPA count: " + jpaMemberRepository.count());
-            System.out.println("MongoDB count: " + mongoMemberRepository.count());
+            logger.debug("Current database counts after {}:", operation);
+            logger.debug("JPA count: {}", jpaMemberRepository.count());
+            logger.debug("MongoDB count: {}", mongoMemberRepository.count());
 
         } catch (Exception e) {
+            logger.error("Verification error for {} operation: {}", operation, e.getMessage());
             verificationErrors.merge(operation, 1, Integer::sum);
-            System.out.println("Verification error for " + operation + " operation: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -351,38 +355,35 @@ public class DatabaseStrategyComparisonTest extends BasePerformanceTest {
             // Check JPA database
             boolean jpaExists = jpaMemberRepository.existsById(Long.parseLong(id));
             if (jpaExists) {
+                logger.warn("JPA verification failed for {} operation - record still exists", operation);
                 verificationErrors.merge(operation, 1, Integer::sum);
-                System.out.println("JPA verification failed for " + operation + " operation - record still exists");
             }
 
             // Check MongoDB
             boolean mongoExists = mongoMemberRepository.existsById(id);
             if (mongoExists) {
+                logger.warn("MongoDB verification failed for {} operation - record still exists", operation);
                 verificationErrors.merge(operation, 1, Integer::sum);
-                System.out.println("MongoDB verification failed for " + operation + " operation - record still exists");
             }
 
-            // Print database counts for verification
-            System.out.println("Current database counts after " + operation + ":");
-            System.out.println("JPA count: " + jpaMemberRepository.count());
-            System.out.println("MongoDB count: " + mongoMemberRepository.count());
+            logger.debug("Current database counts after {}:", operation);
+            logger.debug("JPA count: {}", jpaMemberRepository.count());
+            logger.debug("MongoDB count: {}", mongoMemberRepository.count());
 
         } catch (Exception e) {
+            logger.error("Verification error for {} operation: {}", operation, e.getMessage());
             verificationErrors.merge(operation, 1, Integer::sum);
-            System.out.println("Verification error for " + operation + " operation: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
     private void printComparisonReport() {
-        // Generate text report in console
-        System.out.println("\n=== Database Strategy Performance Comparison Report ===\n");
+        logger.info("\n=== Database Strategy Performance Comparison Report ===\n");
         
         String[] operations = {"Create", "GetById", "GetAll", "Update", "Search", "Delete"};
         
         for (String operation : operations) {
-            System.out.println("\n" + operation + " Operation:");
-            System.out.println("----------------------------------------");
+            logger.info("\n{} Operation:", operation);
+            logger.info("----------------------------------------");
             
             for (Map.Entry<String, Map<String, List<Long>>> strategyEntry : results.entrySet()) {
                 String strategy = strategyEntry.getKey();
@@ -394,19 +395,18 @@ public class DatabaseStrategyComparisonTest extends BasePerformanceTest {
                 double p95 = calculatePercentile(times, 95);
                 double p99 = calculatePercentile(times, 99);
                 
-                System.out.printf("%s:\n", strategy);
-                System.out.printf("  Average: %.2f ms\n", avg);
-                System.out.printf("  P95: %.2f ms\n", p95);
-                System.out.printf("  P99: %.2f ms\n", p99);
-                System.out.printf("  API Errors: %d\n", errors);
-                System.out.printf("  Verification Errors: %d\n", verificationErrors);
-                System.out.println();
+                logger.info("{}:", strategy);
+                logger.info("  Average: {:.2f} ms", avg);
+                logger.info("  P95: {:.2f} ms", p95);
+                logger.info("  P99: {:.2f} ms", p99);
+                logger.info("  API Errors: {}", errors);
+                logger.info("  Verification Errors: {}", verificationErrors);
+                logger.info("");
             }
         }
 
-        // Print summary
-        System.out.println("\nSummary:");
-        System.out.println("----------------------------------------");
+        logger.info("\nSummary:");
+        logger.info("----------------------------------------");
         for (String strategy : results.keySet()) {
             double totalAvg = 0;
             int totalErrors = 0;
@@ -417,14 +417,14 @@ public class DatabaseStrategyComparisonTest extends BasePerformanceTest {
                 totalErrors += errorCounts.get(strategy).getOrDefault(operation, 0);
                 totalVerificationErrors += verificationErrors.get(strategy).getOrDefault(operation, 0);
             }
-            System.out.printf("%s Overall Average: %.2f ms\n", strategy, totalAvg / operations.length);
-            System.out.printf("%s Total API Errors: %d\n", strategy, totalErrors);
-            System.out.printf("%s Total Verification Errors: %d\n", strategy, totalVerificationErrors);
+            logger.info("{} Overall Average: {:.2f} ms", strategy, totalAvg / operations.length);
+            logger.info("{} Total API Errors: {}", strategy, totalErrors);
+            logger.info("{} Total Verification Errors: {}", strategy, totalVerificationErrors);
         }
 
         // Generate visual report with charts
         PerformanceReportGenerator.generateReport(results, errorCounts, verificationErrors);
-        System.out.println("\nDetailed performance report with charts has been generated in the 'performance-reports' directory.");
+        logger.info("\nDetailed performance report with charts has been generated in the 'performance-reports' directory.");
     }
 
     private double calculatePercentile(List<Long> times, int percentile) {

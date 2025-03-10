@@ -234,6 +234,107 @@ cd backend
 mvn verify -P integration-test
 ```
 
+### Running Performance Tests via Docker
+
+The project includes comprehensive performance testing capabilities for both frontend and backend components. All tests can be run using Docker Compose for consistent and isolated testing environments.
+
+#### Quick Start
+```bash
+# Run all performance tests
+./run-performance-tests.sh
+
+# View results
+open performance-reports/latest/index.html
+```
+
+#### Manual Test Execution
+You can also run specific test components individually:
+
+```bash
+# Run only backend performance tests
+docker compose run --rm backend-performance-tests
+
+# Run only frontend performance tests
+docker compose run --rm frontend-performance-tests
+
+# Run with specific timestamp
+TIMESTAMP=$(date +%Y%m%d_%H%M%S) docker compose run --rm backend-performance-tests
+```
+
+#### Test Configuration
+Performance tests can be configured through environment variables:
+
+Backend Tests:
+```properties
+# Number of concurrent users
+PERFORMANCE_TEST_USERS=100
+
+# Test duration in seconds
+PERFORMANCE_TEST_DURATION=300
+
+# Target endpoints to test
+PERFORMANCE_TEST_ENDPOINTS=/api/v1/members,/api/v1/health
+
+# Database types to test
+PERFORMANCE_TEST_DB_TYPE=mongo,jpa
+```
+
+Frontend Tests:
+```properties
+# Browser type (chromium/firefox)
+PERFORMANCE_TEST_BROWSER=chromium
+
+# Number of test iterations
+PERFORMANCE_TEST_ITERATIONS=3
+
+# Network throttling (fast 3G, slow 3G)
+PERFORMANCE_TEST_NETWORK=fast3G
+
+# CPU throttling factor
+PERFORMANCE_TEST_CPU_THROTTLE=4
+```
+
+#### Test Reports
+Performance test results are organized by timestamp and stored in the `performance-reports` directory:
+
+```
+performance-reports/
+├── latest/                     # Symlink to most recent test run
+└── runs/
+    └── YYYYMMDD_HHMMSS/       # Timestamped test results
+        ├── index.html         # Combined test report
+        ├── backend/           # Backend test results
+        │   ├── database-strategy-comparison/
+        │   └── startup-performance/
+        └── frontend/          # Frontend test results
+            └── performance-report.html
+```
+
+Each test run generates:
+- HTML reports with interactive charts
+- Raw performance data in JSON format
+- Comparative analysis between runs
+- Screenshots and traces (frontend tests)
+- Resource utilization metrics
+
+#### Metrics Collected
+
+Backend Performance Tests measure:
+- API response times
+- Database operation latencies
+- Concurrent request handling
+- Resource utilization under load
+- Database comparison metrics (JPA vs MongoDB)
+- Application startup times
+
+Frontend Performance Tests measure:
+- Page load times
+- First Contentful Paint (FCP)
+- Largest Contentful Paint (LCP)
+- Time to Interactive (TTI)
+- Component render times
+- Network request latencies
+
 ## Frontend Modernization Plan
 
 The current frontend is built with vanilla JavaScript and Bootstrap. We have a plan to modernize it using React and TypeScript for better maintainability and developer experience.

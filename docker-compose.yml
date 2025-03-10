@@ -7,11 +7,14 @@ services:
       dockerfile: Dockerfile
     container_name: kitchensink-backend
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     networks:
       - app-network
     healthcheck:
@@ -27,7 +30,7 @@ services:
       dockerfile: Dockerfile
     container_name: kitchensink-frontend
     ports:
-      - "80:80"
+      - "3000:80"
     depends_on:
       - backend
     networks:
@@ -35,6 +38,88 @@ services:
     volumes:
       - ./frontend/webapp:/usr/share/nginx/html
 
+  frontend-performance-tests:
+    build: 
+      context: ./frontend/webapp
+      dockerfile: Dockerfile
+    container_name: frontend-performance-tests
+    depends_on:
+      - frontend
+      - backend
+    volumes:
+      - ./performance-reports:/app/performance-reports:rw
+      - ./frontend/webapp:/app:rw
+    environment:
+      - NODE_ENV=test
+      - DOCKER_BUILD_ID=${DOCKER_BUILD_ID:-latest}
+      - TIMESTAMP=${TIMESTAMP:-$(date +%Y%m%d_%H%M%S)}
+    networks:
+      - app-network
+    command: sh /app/docker-performance-test.sh
+
+  backend-performance-tests:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.test
+    container_name: backend-performance-tests
+    volumes:
+      - ./performance-reports:/app/performance-reports:rw
+      - ./backend/target:/app/target:rw
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=test
+      - MONGODB_URI=mongodb://mongodb:27017/kitchensink_test
+      - POSTGRES_URL=jdbc:postgresql://postgres:5432/kitchensink
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mysecretpassword
+      - TIMESTAMP=${TIMESTAMP:-$(date +%Y%m%d_%H%M%S)}
+    networks:
+      - app-network
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=kitchensink
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mysecretpassword
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
 networks:
   app-network:
-    driver: bridge 
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  postgres_data: 

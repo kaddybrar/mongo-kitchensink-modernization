@@ -1,0 +1,32 @@
+FROM eclipse-temurin:21-jdk-alpine
+
+WORKDIR /app
+
+# Copy Maven wrapper and pom.xml
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+
+# Install curl for healthchecks
+RUN apk add --no-cache curl
+
+# Make mvnw executable
+RUN chmod +x mvnw
+
+# Download dependencies
+RUN ./mvnw dependency:go-offline
+
+# Copy source code
+COPY src/ src/
+
+# Copy test scripts
+COPY docker-performance-test.sh ./
+RUN chmod +x docker-performance-test.sh
+
+# Set environment variables
+ENV SPRING_PROFILES_ACTIVE=test
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+
+# Create directory for performance reports
+RUN mkdir -p performance-reports
+
+CMD ["./docker-performance-test.sh"] 

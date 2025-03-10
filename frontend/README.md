@@ -69,6 +69,52 @@ docker-compose up
 
 This will start both the frontend and backend services.
 
+## Performance Testing
+
+The frontend includes automated performance testing using Puppeteer to measure:
+
+### Metrics Collected
+- Page load times
+- First Contentful Paint (FCP)
+- Largest Contentful Paint (LCP)
+- Time to Interactive (TTI)
+- Component render times
+- Network request latencies
+
+### Running Performance Tests
+
+```bash
+# Run performance tests in Docker
+cd webapp
+./docker-performance-test.sh
+
+# View results
+open ../../performance-reports/latest/frontend/performance-report.html
+```
+
+### Test Configuration
+Tests can be configured through environment variables:
+```properties
+# Browser type (chromium/firefox)
+PERFORMANCE_TEST_BROWSER=chromium
+
+# Number of test iterations
+PERFORMANCE_TEST_ITERATIONS=3
+
+# Network throttling (fast 3G, slow 3G)
+PERFORMANCE_TEST_NETWORK=fast3G
+
+# CPU throttling factor
+PERFORMANCE_TEST_CPU_THROTTLE=4
+```
+
+### Test Reports
+- Performance metrics visualization
+- Waterfall charts for page loads
+- Component-level timing breakdown
+- Network request analysis
+- Screenshots and traces
+
 ## Deployment
 
 The frontend is designed to be deployed as a Docker container. The included Dockerfile creates an Nginx-based image that:

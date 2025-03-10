@@ -9,6 +9,8 @@ import com.mongo.kitchensink.KitchensinkApplication;
 import org.springframework.test.context.support.TestPropertySourceUtils;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -28,6 +30,7 @@ import java.util.ArrayList;
 })
 public class StartupPerformanceTest extends BasePerformanceTest {
 
+    private static final Logger logger = LoggerFactory.getLogger(StartupPerformanceTest.class);
     private static final int ITERATIONS = 3;
 
     private int findRandomPort() {
@@ -45,10 +48,10 @@ public class StartupPerformanceTest extends BasePerformanceTest {
         Map<String, List<Long>> startupTimes = new HashMap<>();
         results.put("Application Startup", startupTimes);
 
-        System.out.println("\nMeasuring application startup time...");
+        logger.info("\nMeasuring application startup time...");
         
         for (int i = 0; i < ITERATIONS; i++) {
-            System.out.println("\nIteration " + (i + 1) + " of " + ITERATIONS);
+            logger.info("\nIteration {} of {}", i + 1, ITERATIONS);
             
             // Measure Spring context startup time
             Instant contextStart = Instant.now();
@@ -82,7 +85,7 @@ public class StartupPerformanceTest extends BasePerformanceTest {
         }
 
         // Generate report
-        System.out.println("\n=== Application Startup Performance Report ===\n");
+        logger.info("\n=== Application Startup Performance Report ===\n");
         
         for (Map.Entry<String, List<Long>> entry : startupTimes.entrySet()) {
             String component = entry.getKey();
@@ -93,10 +96,10 @@ public class StartupPerformanceTest extends BasePerformanceTest {
                     .average()
                     .orElse(0.0);
             
-            System.out.printf("%s:\n", component);
-            System.out.printf("  Average: %.2f ms (%.2f seconds)\n", avgTime, avgTime / 1000.0);
-            System.out.printf("  Individual times: %s\n", times);
-            System.out.println();
+            logger.info("{}:", component);
+            logger.info("  Average: {:.2f} ms ({:.2f} seconds)", avgTime, avgTime / 1000.0);
+            logger.info("  Individual times: {}", times);
+            logger.info("");
         }
 
         // Generate visual report

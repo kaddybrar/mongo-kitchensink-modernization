@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Performance Test Reports</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .metric-card {
+            margin-bottom: 1rem;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+        .good-metric {
+            color: #198754;
+        }
+        .warning-metric {
+            color: #ffc107;
+        }
+        .bad-metric {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Performance Test Report Viewer</h1>
+        
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Load Report</h5>
+                        <input type="file" class="form-control" id="reportFile" accept=".json">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="reportContent" style="display: none;">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Test Results</h5>
+                            <small class="text-muted" id="timestamp"></small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Core Web Vitals</h6>
+                                    <div id="webVitals"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Page Load Metrics</h6>
+                                    <div id="pageLoadMetrics"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <h6>Resource Metrics</h6>
+                                    <div id="resourceMetrics"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Environment Info</h6>
+                                    <div id="environmentInfo"></div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <h6>Raw Report Data</h6>
+                                    <pre id="rawReport" style="max-height: 400px; overflow-y: auto;"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getMetricClass(metric, thresholds) {
+            if (metric <= thresholds.good) return 'good-metric';
+            if (metric <= thresholds.warning) return 'warning-metric';
+            return 'bad-metric';
+        }
+
+        function formatMetric(value, unit = 'ms') {
+            return `${Math.round(value)}${unit}`;
+        }
+
+        function displayReport(report) {
+            document.getElementById('reportContent').style.display = 'block';
+            document.getElementById('timestamp').textContent = new Date(report.timestamp).toLocaleString();
+            document.getElementById('rawReport').textContent = JSON.stringify(report, null, 2);
+
+            // Web Vitals thresholds
+            const thresholds = {
+                LCP: { good: 2500, warning: 4000 },
+                FID: { good: 100, warning: 300 },
+                CLS: { good: 0.1, warning: 0.25 }
+            };
+
+            // Display Web Vitals
+            const webVitalsHtml = `
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">LCP (Largest Contentful Paint)</h6>
+                            <span class="${getMetricClass(report.metrics?.summary?.LCP, thresholds.LCP)}">
+                                ${formatMetric(report.metrics?.summary?.LCP)}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">FID (First Input Delay)</h6>
+                            <span class="${getMetricClass(report.metrics?.summary?.FID, thresholds.FID)}">
+                                ${formatMetric(report.metrics?.summary?.FID)}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">CLS (Cumulative Layout Shift)</h6>
+                            <span class="${getMetricClass(report.metrics?.summary?.CLS || 0, thresholds.CLS)}">
+                                ${(report.metrics?.summary?.CLS || 0).toFixed(3)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('webVitals').innerHTML = webVitalsHtml;
+
+            // Display Page Load Metrics
+            const pageLoadHtml = `
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Time to First Byte</h6>
+                            <span>${formatMetric(report.metrics?.summary?.TTFB)}</span>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">DOM Interactive</h6>
+                            <span>${formatMetric(report.metrics?.summary?.domInteractive)}</span>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Load Complete</h6>
+                            <span>${formatMetric(report.metrics?.summary?.loadComplete)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('pageLoadMetrics').innerHTML = pageLoadHtml;
+
+            // Display Resource Metrics
+            const resourceMetricsHtml = `
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Total Resources</h6>
+                            <span>${report.metrics?.summary?.resourceMetrics?.totalResources || 0}</span>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Total Transfer Size</h6>
+                            <span>${formatMetric(report.metrics?.summary?.resourceMetrics?.totalTransferSize || 0, 'bytes')}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('resourceMetrics').innerHTML = resourceMetricsHtml;
+
+            // Display Environment Info
+            const envHtml = `
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Node Version</h6>
+                            <span>${report.environment?.nodeVersion || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Browser</h6>
+                            <span>${report.environment?.browser || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Platform</h6>
+                            <span>${report.environment?.platform || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('environmentInfo').innerHTML = envHtml;
+        }
+
+        // File input handler
+        document.getElementById('reportFile').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const report = JSON.parse(e.target.result);
+                        displayReport(report);
+                    } catch (error) {
+                        console.error('Error parsing report:', error);
+                        alert('Error parsing the report file. Please ensure it is a valid JSON file.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+    </script>
+</body>
+</html> 

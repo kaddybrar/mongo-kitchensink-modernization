@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Database Strategy Performance Report</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 40px; }
+h1, h2 { color: #333; }
+.chart { margin: 20px 0; text-align: center; }
+table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+th { background-color: #f5f5f5; }
+</style>
+</head>
+<body>
+<h1>Database Strategy Performance Report</h1>
+<p>Generated: 2025-03-09 21-29-30</p>
+<h2>Performance Charts</h2>
+<div class='chart'><img src='average-latency.png' alt='Average Latency Chart'></div>
+<div class='chart'><img src='p95-latency.png' alt='P95 Latency Chart'></div>
+<div class='chart'><img src='p99-latency.png' alt='P99 Latency Chart'></div>
+<div class='chart'><img src='errors.png' alt='Error Chart'></div>
+<h2>Detailed Results</h2>
+<table>
+<tr><th>Strategy</th><th>Operation</th><th>Average (ms)</th><th>P95 (ms)</th><th>P99 (ms)</th><th>API Errors</th><th>Verification Errors</th></tr>
+<tr><td>JPA</td><td>Create</td><td>14.42</td><td>31.00</td><td>44.00</td><td>0</td><td>0</td></tr>
+<tr><td>JPA</td><td>GetById</td><td>5.97</td><td>11.00</td><td>20.00</td><td>0</td><td>0</td></tr>
+<tr><td>JPA</td><td>GetAll</td><td>7.44</td><td>15.00</td><td>23.00</td><td>0</td><td>0</td></tr>
+<tr><td>JPA</td><td>Update</td><td>13.54</td><td>25.00</td><td>41.00</td><td>0</td><td>0</td></tr>
+<tr><td>JPA</td><td>Search</td><td>7.93</td><td>13.00</td><td>36.00</td><td>0</td><td>0</td></tr>
+<tr><td>JPA</td><td>Delete</td><td>9.75</td><td>19.00</td><td>23.00</td><td>0</td><td>0</td></tr>
+<tr><td>MongoDB</td><td>Create</td><td>11.83</td><td>18.00</td><td>26.00</td><td>0</td><td>0</td></tr>
+<tr><td>MongoDB</td><td>GetById</td><td>5.63</td><td>10.00</td><td>45.00</td><td>0</td><td>0</td></tr>
+<tr><td>MongoDB</td><td>GetAll</td><td>5.29</td><td>10.00</td><td>18.00</td><td>0</td><td>0</td></tr>
+<tr><td>MongoDB</td><td>Update</td><td>11.69</td><td>22.00</td><td>31.00</td><td>0</td><td>0</td></tr>
+<tr><td>MongoDB</td><td>Search</td><td>6.19</td><td>13.00</td><td>17.00</td><td>0</td><td>0</td></tr>
+<tr><td>MongoDB</td><td>Delete</td><td>8.61</td><td>15.00</td><td>35.00</td><td>0</td><td>0</td></tr>
+<tr><td>Dual Write</td><td>Create</td><td>39.07</td><td>77.00</td><td>665.00</td><td>0</td><td>0</td></tr>
+<tr><td>Dual Write</td><td>GetById</td><td>7.10</td><td>17.00</td><td>52.00</td><td>0</td><td>0</td></tr>
+<tr><td>Dual Write</td><td>GetAll</td><td>7.46</td><td>24.00</td><td>56.00</td><td>0</td><td>0</td></tr>
+<tr><td>Dual Write</td><td>Update</td><td>22.44</td><td>39.00</td><td>279.00</td><td>0</td><td>0</td></tr>
+<tr><td>Dual Write</td><td>Search</td><td>12.55</td><td>43.00</td><td>94.00</td><td>0</td><td>0</td></tr>
+<tr><td>Dual Write</td><td>Delete</td><td>17.59</td><td>47.00</td><td>275.00</td><td>0</td><td>0</td></tr>
+</table>
+</body></html>

@@ -10,6 +10,8 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.File;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 public class PerformanceReportGenerator {
+    private static final Logger logger = LoggerFactory.getLogger(PerformanceReportGenerator.class);
     private static final int CHART_WIDTH = 800;
     private static final int CHART_HEIGHT = 600;
     private static final String REPORTS_DIR = "target/performance-reports";
@@ -32,7 +35,7 @@ public class PerformanceReportGenerator {
             Map<String, Map<String, Integer>> verificationErrors) {
         try {
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
-            String reportDir = REPORTS_DIR + "/" + timestamp;
+            String reportDir = REPORTS_DIR;
             
             // Create target directory if it doesn't exist
             Files.createDirectories(Paths.get(reportDir));
@@ -43,10 +46,10 @@ public class PerformanceReportGenerator {
             generateErrorChart(errorCounts, verificationErrors, reportDir);
             generateHtmlReport(results, errorCounts, verificationErrors, reportDir, timestamp);
 
-            System.out.println("\nPerformance report generated in: " + Paths.get(reportDir).toAbsolutePath());
+            logger.info("\nPerformance report generated in: {}", Paths.get(reportDir).toAbsolutePath());
 
         } catch (IOException e) {
-            System.err.println("Error generating performance report: " + e.getMessage());
+            logger.error("Error generating performance report: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -54,7 +57,7 @@ public class PerformanceReportGenerator {
     public static void generateStartupReport(Map<String, Map<String, List<Long>>> results) {
         try {
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
-            String reportDir = REPORTS_DIR + "/" + timestamp;
+            String reportDir = REPORTS_DIR;
             
             // Create target directory if it doesn't exist
             Files.createDirectories(Paths.get(reportDir));
@@ -65,10 +68,10 @@ public class PerformanceReportGenerator {
             // Generate HTML report
             generateStartupHtmlReport(results, reportDir, timestamp);
 
-            System.out.println("\nStartup performance report generated in: " + Paths.get(reportDir).toAbsolutePath());
+            logger.info("\nStartup performance report generated in: {}", Paths.get(reportDir).toAbsolutePath());
 
         } catch (IOException e) {
-            System.err.println("Error generating startup performance report: " + e.getMessage());
+            logger.error("Error generating startup performance report: " + e.getMessage());
             e.printStackTrace();
         }
     }

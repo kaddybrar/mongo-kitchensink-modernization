@@ -1,0 +1,18 @@
+{
+  "name": "kitchensink-performance-tests",
+  "version": "1.0.0",
+  "description": "Performance tests for Kitchensink application",
+  "scripts": {
+    "test": "node docker-performance-test.sh",
+    "view-reports": "node report-server.js"
+  },
+  "dependencies": {
+    "puppeteer": "^21.1.1",
+    "puppeteer-core": "^21.1.1"
+  },
+  "devDependencies": {
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+} 

@@ -8,6 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -29,6 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 @MockBean(JpaMemberService.class)
 public class MongoOnlyIntegrationTest extends BaseIntegrationTest {
+    private static final Logger logger = LoggerFactory.getLogger(MongoOnlyIntegrationTest.class);
+
     @Test
     void createAndRetrieveMember_MongoOnly_Success() throws Exception {
         // Arrange - Create a new member
@@ -108,7 +112,7 @@ public class MongoOnlyIntegrationTest extends BaseIntegrationTest {
                 .content(objectMapper.writeValueAsString(memberDTO)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        System.out.println("Response JSON: " + responseJson);
+        logger.debug("Response JSON: {}", responseJson);
         MemberDTO createdMember = objectMapper.readValue(responseJson, MemberDTO.class);
 
         // Act - Delete the member

@@ -160,6 +160,50 @@ mvn test -Dtest=MemberControllerTest
 mvn test -Dtest=MemberControllerTest#getMember_ExistingId_ReturnsMember
 ```
 
+## Performance Testing
+
+The backend includes a comprehensive performance testing framework that measures:
+
+### Test Types
+- API response times for all endpoints
+- Database operation latencies (both MongoDB and PostgreSQL)
+- Concurrent request handling
+- Resource utilization under load
+
+### Running Performance Tests
+
+```bash
+# Run performance tests in Docker
+./docker-performance-test.sh
+
+# View results
+open ../performance-reports/latest/backend/report.html
+```
+
+### Test Configuration
+
+Performance tests can be configured through environment variables:
+```properties
+# Number of concurrent users
+PERFORMANCE_TEST_USERS=100
+
+# Test duration in seconds
+PERFORMANCE_TEST_DURATION=300
+
+# Target endpoints
+PERFORMANCE_TEST_ENDPOINTS=/api/v1/members,/api/v1/health
+
+# Database type for testing
+PERFORMANCE_TEST_DB_TYPE=mongo,jpa
+```
+
+### Test Reports
+- Detailed latency metrics
+- Response time percentiles
+- Error rates and types
+- Database operation timings
+- Resource utilization graphs
+
 ## Code Coverage with JaCoCo
 
 JaCoCo is configured to provide code coverage metrics for the test suite.
