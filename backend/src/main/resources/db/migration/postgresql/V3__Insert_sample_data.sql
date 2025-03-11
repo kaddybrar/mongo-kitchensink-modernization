@@ -1,4 +1,4 @@
--- Insert sample data only if the table is empty
+-- Insert sample data
 INSERT INTO member (name, email, phone_number)
 SELECT 'John Doe', 'john.doe@example.com', '+11234567890'
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'john.doe@example.com');

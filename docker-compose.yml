@@ -10,6 +10,18 @@ services:
       - "8081:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=${POSTGRES_URL:-jdbc:postgresql://postgres:5432/kitchensink}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-mysecretpassword}
+      - SPRING_DATA_MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/kitchensink}
+      - SPRING_DATA_MONGODB_DATABASE=${MONGODB_DATABASE:-kitchensink}
+      - SPRING_DATA_MONGODB_AUTO_INDEX_CREATION=false
+      - SPRING_FLYWAY_ENABLED=true
+      - SPRING_FLYWAY_BASELINE_ON_MIGRATE=true
+      - SPRING_FLYWAY_VALIDATE_ON_MIGRATE=true
+      - SPRING_FLYWAY_MONGODB_ENABLED=true
+      - SPRING_FLYWAY_LOCATIONS=classpath:db/migration/postgresql
+      - SPRING_FLYWAY_MONGODB_LOCATIONS=classpath:db/migration/mongodb
     depends_on:
       mongodb:
         condition: service_healthy
@@ -43,6 +55,8 @@ services:
       context: ./frontend/webapp
       dockerfile: Dockerfile
     container_name: frontend-performance-tests
+    profiles:
+      - performance
     depends_on:
       - frontend
       - backend
@@ -62,6 +76,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile.test
     container_name: backend-performance-tests
+    profiles:
+      - performance
     volumes:
       - ./performance-reports:/app/performance-reports:rw
       - ./backend/target:/app/target:rw
@@ -72,7 +88,7 @@ services:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=test
-      - MONGODB_URI=mongodb://mongodb:27017/kitchensink_test
+      - MONGODB_URI=mongodb://mongodb:27017/kitchensink
       - POSTGRES_URL=jdbc:postgresql://postgres:5432/kitchensink
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=mysecretpassword
@@ -86,7 +102,7 @@ services:
     ports:
       - "27018:27017"
     volumes:
-      - mongodb_data:/data/db
+      - ./data/mongodb:/data/db:rw
     networks:
       - app-network
     healthcheck:
@@ -97,7 +113,7 @@ services:
       start_period: 40s
 
   postgres:
-    image: postgres:latest
+    image: postgres:15
     container_name: postgres
     environment:
       - POSTGRES_DB=kitchensink
@@ -106,7 +122,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./data/postgres:/var/lib/postgresql/data:rw
     networks:
       - app-network
     healthcheck:
@@ -122,4 +138,6 @@ networks:
 
 volumes:
   mongodb_data:
-  postgres_data: 
+    name: kitchensink_mongodb_data
+  postgres_data:
+    name: kitchensink_postgres_data 

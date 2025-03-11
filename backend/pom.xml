@@ -34,6 +34,17 @@
         <java.version>21</java.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>jcenter</id>
+            <url>https://jcenter.bintray.com</url>
+        </repository>
+        <repository>
+            <id>flyway-repo</id>
+            <url>https://nexus.flywaydb.org/repository/flyway/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -125,9 +136,21 @@
             <version>1.5.4</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -205,6 +228,26 @@
                     <argLine>-Dnet.bytebuddy.experimental=true -XX:+StartAttachListener --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
                     <useJaCoCo>false</useJaCoCo>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <configuration>
+                    <driver>org.postgresql.Driver</driver>
+                    <url>${POSTGRES_URL:jdbc:postgresql://localhost:5432/kitchensink}</url>
+                    <user>${POSTGRES_USER:postgres}</user>
+                    <password>${POSTGRES_PASSWORD:mysecretpassword}</password>
+                    <locations>
+                        <location>classpath:db/migration/postgresql</location>
+                    </locations>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>42.7.2</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

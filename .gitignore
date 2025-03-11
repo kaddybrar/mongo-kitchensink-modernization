@@ -79,6 +79,10 @@ Thumbs.db
 
 # Docker
 .docker/
+# Docker data persistence
+data/
+data/*
+**/data/
 
 # Environment variables
 .env

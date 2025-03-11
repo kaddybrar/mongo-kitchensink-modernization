@@ -24,7 +24,7 @@ echo "Running performance tests..."
   -DfailIfNoTests=false \
   -Djacoco.skip=true \
   -Dspring.data.mongodb.uri=${MONGODB_URI:-mongodb://mongodb:27017/kitchensink_test} \
-  -Dspring.datasource.url=${POSTGRES_URL:-jdbc:postgresql://postgres:5432/kitchensink} \
+  -Dspring.datasource.url=${POSTGRES_URL:-jdbc:postgresql://postgres:5432/kitchensink_test} \
   -Dspring.datasource.username=${POSTGRES_USER:-postgres} \
   -Dspring.datasource.password=${POSTGRES_PASSWORD:-mysecretpassword}
 

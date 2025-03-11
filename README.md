@@ -252,13 +252,13 @@ You can also run specific test components individually:
 
 ```bash
 # Run only backend performance tests
-docker compose run --rm backend-performance-tests
+docker compose --profile performance run --rm backend-performance-tests
 
 # Run only frontend performance tests
-docker compose run --rm frontend-performance-tests
+docker compose --profile performance run --rm frontend-performance-tests
 
 # Run with specific timestamp
-TIMESTAMP=$(date +%Y%m%d_%H%M%S) docker compose run --rm backend-performance-tests
+TIMESTAMP=$(date +%Y%m%d_%H%M%S) docker compose --profile performance run --rm backend-performance-tests
 ```
 
 #### Test Configuration
@@ -277,6 +277,12 @@ PERFORMANCE_TEST_ENDPOINTS=/api/v1/members,/api/v1/health
 
 # Database types to test
 PERFORMANCE_TEST_DB_TYPE=mongo,jpa
+
+# Warmup iterations
+PERFORMANCE_TEST_WARMUP=10
+
+# Main test iterations
+PERFORMANCE_TEST_ITERATIONS=100
 ```
 
 Frontend Tests:
@@ -320,7 +326,7 @@ Each test run generates:
 #### Metrics Collected
 
 Backend Performance Tests measure:
-- API response times
+- API response times (average, P95, P99)
 - Database operation latencies
 - Concurrent request handling
 - Resource utilization under load
@@ -334,6 +340,36 @@ Frontend Performance Tests measure:
 - Time to Interactive (TTI)
 - Component render times
 - Network request latencies
+
+#### Running Tests in CI/CD
+For automated testing in CI/CD environments:
+
+```bash
+# Run with specific configuration
+PERFORMANCE_TEST_USERS=50 \
+PERFORMANCE_TEST_DURATION=60 \
+PERFORMANCE_TEST_DB_TYPE=mongo \
+./run-performance-tests.sh
+
+# Run with fail conditions
+PERFORMANCE_TEST_MAX_P95_LATENCY=500 \
+PERFORMANCE_TEST_ERROR_RATE_THRESHOLD=1 \
+./run-performance-tests.sh
+```
+
+#### Analyzing Results
+The test results can be analyzed using:
+
+```bash
+# Generate comparison report with previous run
+./analyze-performance.sh --compare-with previous
+
+# Export metrics to CSV
+./analyze-performance.sh --export csv
+
+# Generate summary report
+./analyze-performance.sh --summary
+```
 
 ## Frontend Modernization Plan
 

@@ -127,6 +127,118 @@ app.dual.write.compare=true
 
 This approach enables a zero-downtime migration with minimal risk, allowing for gradual testing and validation of the MongoDB implementation before fully switching over.
 
+## Database Migrations with Flyway
+
+### Migration Structure
+
+The project uses Flyway for database schema migrations with separate locations for PostgreSQL and MongoDB:
+
+```
+src/main/resources/db/migration/
+├── postgresql/                # PostgreSQL migrations
+│   ├── V1__Create_member_table.sql
+│   ├── V2__Add_updated_at_trigger.sql
+│   └── V3__Insert_sample_data.sql
+└── mongodb/                  # MongoDB migrations (if needed)
+    └── V1__Initial_setup.js
+```
+
+### Migration Guidelines
+
+1. **Naming Convention**:
+   - Version-based: `V{number}__{description}.sql`
+   - Example: `V1__Create_member_table.sql`
+   - Use double underscores between version and description
+   - Keep descriptions concise and use underscores for spaces
+
+2. **Schema Design**:
+   - Use `IF NOT EXISTS` for idempotent operations
+   - Create sequences before tables that use them
+   - Define explicit column types (e.g., `BIGINT` instead of `SERIAL`)
+   - Add appropriate indexes for performance
+   - Use `TIMESTAMP` type for temporal fields
+
+3. **Best Practices**:
+   - Never modify existing migrations
+   - Create new migrations for schema changes
+   - Include rollback scripts when possible
+   - Test migrations on a clean database
+   - Keep migrations atomic and focused
+
+### Running Migrations
+
+#### Using Maven
+
+```bash
+# Apply migrations
+mvn flyway:migrate
+
+# Clean database and reapply migrations
+mvn flyway:clean flyway:migrate
+
+# Check migration status
+mvn flyway:info
+
+# Validate migrations
+mvn flyway:validate
+
+# Repair migration history table
+mvn flyway:repair
+```
+
+#### Using Docker Compose
+
+```bash
+# Apply migrations through application startup
+docker compose up -d
+
+# Force migration refresh (will clean database)
+docker compose down
+docker volume rm mongo-kitchensink-modernization_postgres_data
+docker compose up -d
+```
+
+### Configuration
+
+The project uses Spring Boot's Flyway auto-configuration with these settings:
+
+```properties
+# Enable Flyway
+spring.flyway.enabled=true
+
+# PostgreSQL migrations
+spring.flyway.locations=classpath:db/migration/postgresql
+spring.flyway.baseline-on-migrate=true
+spring.flyway.validate-on-migrate=true
+
+# Database connection (from environment)
+spring.flyway.url=${POSTGRES_URL:jdbc:postgresql://localhost:5432/kitchensink}
+spring.flyway.user=${POSTGRES_USER:postgres}
+spring.flyway.password=${POSTGRES_PASSWORD:mysecretpassword}
+```
+
+### Troubleshooting Migrations
+
+1. **Checksum Mismatch**:
+   ```bash
+   # Repair Flyway schema history
+   mvn flyway:repair
+   ```
+
+2. **Clean Start**:
+   ```bash
+   # Remove existing data and reapply migrations
+   mvn flyway:clean flyway:migrate
+   ```
+
+3. **Version Conflicts**:
+   ```bash
+   # Check current status
+   mvn flyway:info
+   
+   # Repair if needed
+   mvn flyway:repair
+   ```
 
 ## Testing Framework
 
@@ -260,8 +372,6 @@ java.lang.Exception
 
 The `GlobalExceptionHandler` class centralizes error handling using Spring's `@ControllerAdvice` and provides appropriate HTTP status codes and error messages for different exception types:
 
-
-
 #### HTTP Status Codes
 
 | Exception Type             | HTTP Status Code | Description                                      |
@@ -285,7 +395,6 @@ All error responses follow a consistent JSON format:
   "timestamp": "2023-06-15T10:30:45.123Z"
 }
 ```
-
 
 ## Java 23 Compatibility
 

@@ -8,9 +8,9 @@ echo "Starting performance test suite..."
 # Create base directory for reports
 mkdir -p performance-reports/runs
 
-# Build and start all services
-docker compose build
-docker compose up -d
+# Build and start all services with performance profile
+docker compose --profile performance build
+docker compose --profile performance up -d
 
 # Wait for services to be ready
 echo "Waiting for services to be ready..."
@@ -23,7 +23,7 @@ mkdir -p "${RUN_DIR}"
 
 # Run backend performance tests
 echo "Running backend performance tests..."
-TIMESTAMP=${TIMESTAMP} docker compose run --rm backend-performance-tests
+TIMESTAMP=${TIMESTAMP} docker compose --profile performance run --rm backend-performance-tests
 
 # Run frontend performance tests and copy results
 echo "Running frontend performance tests..."
@@ -31,7 +31,7 @@ FRONTEND_DIR="${RUN_DIR}/frontend"
 mkdir -p "${FRONTEND_DIR}"
 
 # Run frontend tests
-TIMESTAMP=${TIMESTAMP} docker compose run --rm frontend-performance-tests
+TIMESTAMP=${TIMESTAMP} docker compose --profile performance run --rm frontend-performance-tests
 
 # Generate frontend index.html
 cat > "${FRONTEND_DIR}/index.html" << EOL
@@ -119,7 +119,7 @@ cd ..
 
 # Clean up containers
 echo "Cleaning up..."
-docker compose down
+docker compose --profile performance down
 
 echo "Performance tests completed. Reports available at:"
 echo "- Latest results: performance-reports/latest/index.html"
