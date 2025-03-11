@@ -1,0 +1,49 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install required packages for performance testing
+RUN apk add --no-cache \
+    chromium \
+    chromium-chromedriver \
+    harfbuzz \
+    nss \
+    freetype \
+    ttf-freefont \
+    font-noto-emoji \
+    wqy-zenhei \
+    curl \
+    wget \
+    tar \
+    gzip \
+    nodejs \
+    npm
+
+# Install k6
+RUN wget -q -O /tmp/k6.tar.gz https://github.com/grafana/k6/releases/download/v0.42.0/k6-v0.42.0-linux-amd64.tar.gz && \
+    tar -xzf /tmp/k6.tar.gz -C /tmp && \
+    mv /tmp/k6-v0.42.0-linux-amd64/k6 /usr/local/bin/ && \
+    rm -rf /tmp/k6*
+
+# Install Lighthouse globally
+RUN npm install -g lighthouse
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code and test files
+COPY . .
+
+# Set environment variables for Chrome
+ENV CHROME_BIN=/usr/bin/chromium-browser \
+    CHROME_PATH=/usr/lib/chromium/ \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+# Make performance test script executable
+RUN chmod +x docker-performance-test.sh
+
+CMD ["sh", "./docker-performance-test.sh"] 

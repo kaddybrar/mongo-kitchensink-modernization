@@ -122,4 +122,10 @@ coverage.xml
 
 # Temporary files
 temp/
-tmp/ 
+tmp/
+
+# Test generated files
+**/node_modules/
+**/dist/
+**/.env
+**/.DS_Store 

@@ -51,7 +51,7 @@ services:
     volumes:
       - ./frontend/webapp:/usr/share/nginx/html
     environment:
-      - VITE_API_URL=${VITE_API_URL:-http://backend:8081}
+      - VITE_API_URL=${VITE_API_URL:-http://backend:8080}
       - NODE_ENV=${NODE_ENV:-production}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/"]
@@ -73,7 +73,7 @@ services:
     networks:
       - app-network
     environment:
-      - VITE_API_URL=${VITE_API_URL:-http://backend:8081}
+      - VITE_API_URL=${VITE_API_URL:-http://backend:8080}
       - NODE_ENV=${NODE_ENV:-production}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/"]
@@ -84,24 +84,55 @@ services:
 
   frontend-performance-tests:
     build: 
-      context: ./frontend/webapp
+      context: ./shared/performance-tests
       dockerfile: Dockerfile
     container_name: frontend-performance-tests
     profiles:
       - performance
     depends_on:
-      - frontend
-      - backend
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
     volumes:
       - ./performance-reports:/app/performance-reports:rw
-      - ./frontend/webapp:/app:rw
+      - ./shared/performance-tests:/app:rw
     environment:
       - NODE_ENV=test
       - DOCKER_BUILD_ID=${DOCKER_BUILD_ID:-latest}
-      - TIMESTAMP=${TIMESTAMP:-$(date +%Y%m%d_%H%M%S)}
+      - TIMESTAMP=${TEST_RUN_TIMESTAMP}
+      - VITE_API_URL=http://backend:8080
+      - TEST_URL=http://frontend:80
+      - APP_PAGE_URL=http://frontend:80
     networks:
       - app-network
-    command: sh /app/docker-performance-test.sh
+    command: sh /app/docker-performance-test.sh "frontend" "http://frontend:80"
+
+  frontend-react-performance-tests:
+    build: 
+      context: ./shared/performance-tests
+      dockerfile: Dockerfile
+    container_name: frontend-react-performance-tests
+    profiles:
+      - performance
+    depends_on:
+      frontend-new:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./performance-reports:/app/performance-reports:rw
+      - ./shared/performance-tests:/app:rw
+    environment:
+      - NODE_ENV=test
+      - DOCKER_BUILD_ID=${DOCKER_BUILD_ID:-latest}
+      - TIMESTAMP=${TEST_RUN_TIMESTAMP}
+      - VITE_API_URL=http://backend:8080
+      - TEST_URL=http://frontend-new:80
+      - APP_PAGE_URL=http://frontend-new:80
+    networks:
+      - app-network
+    command: sh /app/docker-performance-test.sh "frontend-react" "http://frontend-new:80"
 
   backend-performance-tests:
     build: 
@@ -124,7 +155,7 @@ services:
       - POSTGRES_URL=jdbc:postgresql://postgres:5432/kitchensink
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=mysecretpassword
-      - TIMESTAMP=${TIMESTAMP:-$(date +%Y%m%d_%H%M%S)}
+      - TIMESTAMP=${TEST_RUN_TIMESTAMP}
     networks:
       - app-network
 

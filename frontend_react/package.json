@@ -13,7 +13,9 @@
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:perf": "node --prof tests/performance/react-perf.js",
+    "performance": "docker compose --profile performance up frontend-react-performance-tests"
   },
   "dependencies": {
     "@headlessui/react": "1.7.18",
