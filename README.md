@@ -1,26 +1,30 @@
 # MongoDB Kitchensink Modernization
 
-A demonstration project showing how to modernize a traditional Java EE application by migrating from PostgreSQL to MongoDB using the dual-write pattern.
+A demonstration project showing how to modernize a traditional Java EE application by migrating from PostgreSQL to MongoDB using the dual-write pattern, featuring both a legacy frontend and a modern React frontend.
 
 ## Project Overview
 
-This project showcases a practical approach to migrating a traditional Java EE application from a relational database (PostgreSQL) to MongoDB. It implements the dual-write pattern to ensure data consistency during the migration process.
+This project showcases a practical approach to migrating a traditional Java EE application from a relational database (PostgreSQL) to MongoDB. It implements the dual-write pattern to ensure data consistency during the migration process and includes two frontend implementations:
+- A legacy frontend built with vanilla JavaScript
+- A modern frontend built with React, TypeScript, and modern tooling
 
 ### Key Features
 
 - **Dual-Write Pattern**: Write to both PostgreSQL and MongoDB simultaneously
 - **Configurable Read Source**: Switch between data sources without code changes
+- **Modern React Frontend**: Built with React 18, TypeScript, and Tailwind CSS
+- **Legacy Frontend Support**: Traditional frontend for comparison
 - **REST API**: Modern REST API built with Spring Boot
-- **Responsive Frontend**: Modern web interface built with HTML5, CSS3, and JavaScript
-- **Containerized Deployment**: Docker and Docker Compose configuration for easy deployment
-- **Comprehensive Testing**: Unit and integration tests for all components
+- **Containerized Deployment**: Docker and Docker Compose configuration
+- **Comprehensive Testing**: Unit, integration, and performance tests
 
 ## Architecture
 
 The application follows a modern architecture with these components:
 
 - **Backend**: Spring Boot application with REST API endpoints
-- **Frontend**: HTML5/JavaScript application served by Nginx
+- **Modern Frontend**: React/TypeScript application with modern tooling
+- **Legacy Frontend**: HTML5/JavaScript application
 - **Databases**: PostgreSQL (legacy) and MongoDB (target)
 
 ### Migration Strategy
@@ -31,23 +35,26 @@ The application implements a three-phase migration strategy:
 2. **Phase 2**: Dual-write to both databases, read from MongoDB
 3. **Phase 3**: Write only to MongoDB, read from MongoDB
 
-This approach allows for a gradual, low-risk migration with the ability to roll back at any point.
-
 ## Project Structure
 
 ```
 mongo-kitchensink-modernization/
 ├── backend/                 # Spring Boot backend application
-│   ├── src/                 # Source code
-│   ├── Dockerfile           # Docker configuration for backend
-│   └── README.md            # Backend documentation
-├── frontend/                # Web frontend
-│   ├── webapp/              # Static web content
-│   ├── Dockerfile           # Docker configuration for frontend
-│   ├── nginx.conf           # Nginx configuration
-│   └── README.md            # Frontend documentation
-├── docker-compose.yml       # Docker Compose configuration
-└── README.md                # This file
+│   ├── src/                # Source code
+│   ├── Dockerfile          # Docker configuration
+│   └── README.md           # Backend documentation
+├── frontend/               # Legacy web frontend
+│   ├── webapp/             # Static web content
+│   ├── Dockerfile         # Docker configuration
+│   ├── nginx.conf        # Nginx configuration
+│   └── README.md         # Frontend documentation
+├── frontend_react/        # Modern React frontend
+│   ├── src/              # React application source
+│   ├── Dockerfile        # Docker configuration
+│   ├── nginx.conf       # Nginx configuration
+│   └── README.md        # React frontend documentation
+├── docker-compose.yml    # Docker Compose configuration
+└── README.md            # This file
 ```
 
 ## Getting Started
@@ -55,167 +62,98 @@ mongo-kitchensink-modernization/
 ### Prerequisites
 
 - Docker and Docker Compose
-- Java 17 or later (for local development)
+- Java 21 or later (for local development)
+- Node.js 18 or later (for frontend development)
 - Maven (for local development)
 - PostgreSQL (for local development)
 - MongoDB (for local development)
 
-### Running with Docker Compose
-
-The easiest way to run the application is using Docker Compose:
+### Quick Start
 
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/mongo-kitchensink-modernization.git
 cd mongo-kitchensink-modernization
 
-# Start the application
-docker-compose up -d
+# Start all services
+docker compose up -d
 ```
 
-This will start:
-- PostgreSQL database
-- MongoDB database
-- Backend Spring Boot application
-- Frontend Nginx server
+### Access Points
 
-Access the application at http://localhost:80
+- Modern React Frontend: http://localhost:3001
+- Legacy Frontend: http://localhost:3000
+- Backend API: http://localhost:8081
+- Swagger UI: http://localhost:8081/swagger-ui.html
+- MongoDB: localhost:27018
+- PostgreSQL: localhost:5433
 
-### Docker Commands
+## Frontend Comparison
 
-Here are some useful Docker commands for managing the application:
+### Modern React Frontend (Port 3001)
 
-#### View running containers
-```bash
-docker-compose ps
-```
+- Built with React 18 and TypeScript
+- Modern development experience with Vite
+- Component-based architecture
+- Efficient state management with React Query
+- Beautiful UI with Tailwind CSS
+- Comprehensive testing setup
+- Type safety throughout the application
 
-#### View logs
-```bash
-# View logs from all services
-docker compose logs
+### Legacy Frontend (Port 3000)
 
-# View logs from a specific service
-docker compose logs backend
-docker compose logs frontend
+- Built with vanilla JavaScript
+- Traditional development approach
+- Direct DOM manipulation
+- Bootstrap for styling
+- jQuery for DOM operations
+- Basic form validation
 
-# Follow logs in real-time
-docker-compose logs -f
-```
+## Development Workflow
 
-#### Stop the application
-```bash
-docker compose down
-```
-
-#### Rebuild and restart services
-```bash
-# Rebuild and restart all services
-docker compose up -d --build
-
-# Rebuild and restart a specific service
-docker compose up -d --build backend
-```
-
-#### Reset the environment
-```bash
-# Stop containers and remove volumes (will delete all data)
-docker compose down -v
-```
-
-#### Scale services
-```bash
-# Run multiple instances of the backend
-docker compose up -d --scale backend=3
-```
-
-### Database Migration Commands
-
-To control the database migration process:
-
-```bash
-# Phase 1: Dual-write, read from PostgreSQL
-docker compose exec backend java -jar app.jar --app.database.type=jpa --app.dual-write.enabled=true
-
-# Phase 2: Dual-write, read from MongoDB
-docker compose exec backend java -jar app.jar --app.database.type=mongo --app.dual-write.enabled=true
-
-# Phase 3: MongoDB only
-docker compose exec backend java -jar app.jar --app.database.type=mongo --app.dual-write.enabled=false
-```
-
-### Local Development Setup
-
-#### Backend
+### Backend Development
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-The backend will be available at http://localhost:8080
-
-#### Frontend
+### Modern Frontend Development
 
 ```bash
-cd frontend/webapp
-# Using any simple HTTP server, e.g.:
+cd frontend_react
+npm install
+npm run dev
+```
+
+### Legacy Frontend Development
+
+```bash
+cd frontend
+# Using any simple HTTP server
 npx http-server
 ```
 
-The frontend will be available at http://localhost:8080
-
 ## Configuration
-
-### Database Selection
-
-The application can be configured to use different database modes:
-
-- **JPA Mode**: Uses only PostgreSQL
-- **MongoDB Mode**: Uses only MongoDB
-- **Dual-Write Mode**: Writes to both databases, configurable read source
-
-These modes can be configured in `application.properties`:
-
-```properties
-# Options: jpa, mongo
-app.database.type=jpa
-
-# Read Source Configuration (for dual-write strategy)
-# Options: jpa, mongo
-app.database.read.source=jpa
-
-# Dual-Write Options
-app.dual-write.enabled=true
-app.dual-write.compare=true
-```
 
 ### Environment Variables
 
-You can also configure the application using environment variables:
+Create a `.env` file in the root directory:
 
-```bash
-# Database type
-export APP_DATABASE_TYPE=mongo
+```env
+# Database Configuration
+MONGODB_URI=mongodb://mongodb:27017/kitchensink
+POSTGRES_URL=jdbc:postgresql://postgres:5432/kitchensink
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=mysecretpassword
 
-# Dual-write configuration
-export APP_DUAL_WRITE_ENABLED=true
-export APP_DATABASE_READ_SOURCE=mongo
+# Backend Configuration
+SPRING_PROFILES_ACTIVE=docker
+APP_DATABASE_TYPE=dual
+APP_DUAL_WRITE_ENABLED=true
 
-# Database connection settings
-export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/kitchensink
-export SPRING_DATASOURCE_USERNAME=postgres
-export SPRING_DATASOURCE_PASSWORD=postgres
-
-export SPRING_DATA_MONGODB_URI=mongodb://localhost:27017/kitchensink
-```
-
-## API Documentation
-
-The REST API is documented using Swagger UI and is available at:
-
-```
-http://localhost:8080/swagger-ui.html
+# Frontend Configuration
+VITE_API_URL=http://localhost:8081
 ```
 
 ## Testing
@@ -227,14 +165,20 @@ cd backend
 mvn test
 ```
 
-### Running Integration Tests
+### Running Modern Frontend Tests
 
 ```bash
-cd backend
-mvn verify -P integration-test
+cd frontend_react
+npm test
 ```
 
-### Running Performance Tests via Docker
+### Running Performance Tests
+
+```bash
+docker compose --profile performance up
+```
+
+### Performance Testing Framework
 
 The project includes comprehensive performance testing capabilities for both frontend and backend components. All tests can be run using Docker Compose for consistent and isolated testing environments.
 
@@ -371,92 +315,45 @@ The test results can be analyzed using:
 ./analyze-performance.sh --summary
 ```
 
-## Frontend Modernization Plan
-
-The current frontend is built with vanilla JavaScript and Bootstrap. We have a plan to modernize it using React and TypeScript for better maintainability and developer experience.
-
-### Planned Tech Stack
-
-- **React**: For component-based UI development
-- **TypeScript**: For type safety and better developer experience
-- **React Router**: For client-side routing
-- **Axios**: For API communication
-- **Jest/React Testing Library**: For testing
-- **Bootstrap or Material-UI**: For styling
-
-### Implementation Phases
-
-1. **Phase 1 (Current)**: Vanilla JavaScript with Bootstrap
-   - Simple HTML/CSS/JS implementation
-   - Direct DOM manipulation
-   - Basic form validation
-
-2. **Phase 2 (Planned)**: React with TypeScript
-   - Component-based architecture
-   - Strong typing with TypeScript
-   - Improved state management
-   - Enhanced form validation
-   - Comprehensive testing
-
-### Benefits of Migration
-
-- **Improved Developer Experience**: Better tooling, type safety, and component reusability
-- **Enhanced Maintainability**: Clearer code organization and separation of concerns
-- **Better Performance**: Virtual DOM for efficient rendering
-- **Improved Testing**: Easier to test components in isolation
-- **Modern UX**: More responsive and interactive user interface
-
-### Migration Strategy
-
-We plan to implement the React frontend alongside the existing one, allowing for:
-
-1. **Parallel Development**: Continue enhancing the current frontend while building the new one
-2. **Incremental Adoption**: Gradually replace parts of the application
-3. **A/B Testing**: Compare user experience between the two versions
-4. **Seamless Transition**: Switch to the new frontend once feature parity is achieved
-
 ## Deployment
 
-### Production Deployment Considerations
+### Production Considerations
 
-For production deployment:
-
-1. Configure secure database credentials in environment variables
-2. Enable HTTPS for both frontend and backend
-3. Configure proper logging
-4. Set up monitoring and alerting
+1. Enable HTTPS for all services
+2. Configure secure database credentials
+3. Set up monitoring and logging
+4. Configure backup strategy
+5. Implement CI/CD pipeline
 
 ### Kubernetes Deployment
 
-For Kubernetes deployment, use the provided manifests:
+Basic Kubernetes manifests are provided in the `k8s/` directory:
 
 ```bash
-# Apply Kubernetes manifests
 kubectl apply -f k8s/
-
-# Check deployment status
-kubectl get pods
 ```
 
 ## Monitoring
 
-The application includes Spring Boot Actuator endpoints for monitoring:
-
-```
-http://localhost:8080/actuator/health
-http://localhost:8080/actuator/info
-http://localhost:8080/actuator/metrics
-```
+- Backend metrics: http://localhost:8081/actuator/metrics
+- Health status: http://localhost:8081/actuator/health
+- Database health: Included in health endpoint
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
+This project is licensed under the MIT License.
 
 ## Acknowledgments
 
-- This project is based on the JBoss EAP Kitchensink quickstart
-- Thanks to the Spring Boot and MongoDB teams for their excellent documentation
+- Spring Boot team for the excellent framework
+- MongoDB team for great documentation
+- React team for the amazing frontend library
+- The open-source community for various tools and libraries
