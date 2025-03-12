@@ -30,14 +30,24 @@ export const MemberForm = ({ member, onClose }: MemberFormProps) => {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+    
+    // Name validation
     if (!formData.name?.trim()) {
       newErrors.name = 'Name is required';
     }
+    
+    // Email validation
     if (!formData.email?.trim()) {
       newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
     }
+    
+    // Phone number validation (optional but must be valid if provided)
+    if (formData.phoneNumber && !/^\+?[0-9]{10,15}$/.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = 'Please enter a valid phone number in international format (e.g., +12345678901)';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -115,15 +125,19 @@ export const MemberForm = ({ member, onClose }: MemberFormProps) => {
 
             <div>
               <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
-                Phone Number
+                Phone Number (Optional)
               </label>
               <input
                 type="tel"
                 id="phoneNumber"
                 value={formData.phoneNumber || ''}
                 onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                placeholder="+12345678901"
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
+                  errors.phoneNumber ? 'border-red-500' : ''
+                }`}
               />
+              {errors.phoneNumber && <p className="mt-1 text-sm text-red-600">{errors.phoneNumber}</p>}
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">

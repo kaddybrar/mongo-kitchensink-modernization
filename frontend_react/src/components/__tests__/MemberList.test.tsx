@@ -79,7 +79,7 @@ describe('MemberList', () => {
   });
 
   it('handles pagination', () => {
-    const manyMembers = Array.from({ length: 15 }, (_, i) => ({
+    const manyMembers = Array.from({ length: 8 }, (_, i) => ({
       id: i + 1,
       name: `User ${i + 1}`,
       email: `user${i + 1}@example.com`,
@@ -94,13 +94,13 @@ describe('MemberList', () => {
 
     render(<MemberList />);
     
-    // Should show pagination when there are more than 10 items
+    // Should show pagination when there are more than 5 items
     const pageOneButton = screen.getByRole('button', { name: '1' });
     expect(pageOneButton).toHaveAttribute('aria-current', 'page');
     
     // Click next page
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    expect(screen.getByText('User 11')).toBeInTheDocument();
+    expect(screen.getByText('User 6')).toBeInTheDocument();
   });
 
   it('handles delete member', async () => {

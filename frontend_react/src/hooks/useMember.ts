@@ -8,6 +8,7 @@ export const useMember = () => {
   const members = useQuery({
     queryKey: ['members'],
     queryFn: memberService.getAll,
+    staleTime: 1000 * 60, // 1 minute
   });
 
   const memberDetails = (id: number) =>
@@ -38,12 +39,17 @@ export const useMember = () => {
     },
   });
 
-  const searchMembers = (query: string) =>
-    useQuery({
+  const searchMembers = (query: string) => {
+    return useQuery({
       queryKey: ['members', 'search', query],
       queryFn: () => memberService.search(query),
-      enabled: !!query,
+      enabled: query.length > 0,
+      placeholderData: members.data,
+      staleTime: 1000 * 60, // 1 minute
+      gcTime: 1000 * 60 * 5, // Keep cached data for 5 minutes
+      refetchOnWindowFocus: false
     });
+  };
 
   return {
     members,
