@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Performance Test Results - 20250312_104408</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1, h2 { color: #333; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .timestamp { color: #666; margin-bottom: 20px; }
+        .report-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .report-card {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .report-card h3 { margin-top: 0; color: #2c3e50; }
+        .report-link {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff;
+            text-decoration: none;
+            color: #333;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            transition: all 0.2s ease;
+        }
+        .report-link:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Performance Test Results</h1>
+    <div class="timestamp">Test Run: 20250312_104408</div>
+    
+    <div class="report-group">
+        <div class="report-card">
+            <h3>Backend</h3>
+            <a class="report-link" href="backend/index.html">
+                Performance Report
+                <small style="display: block; color: #666;">API performance metrics and resource usage</small>
+            </a>
+        </div>
+        
+        <div class="report-card">
+            <h3>Original Frontend</h3>
+            <a class="report-link" href="frontend/performance-report.html">
+                Performance Report
+                <small style="display: block; color: #666;">Core Web Vitals, Lighthouse scores, and API metrics</small>
+            </a>
+        </div>
+        
+        <div class="report-card">
+            <h3>React Frontend</h3>
+            <a class="report-link" href="frontend-react/performance-report.html">
+                Performance Report
+                <small style="display: block; color: #666;">Core Web Vitals, Lighthouse scores, and API metrics</small>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
